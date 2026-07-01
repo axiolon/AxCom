@@ -1,0 +1,171 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+#
+# Prometheus alerting rules for ecom-engine.
+# These fire on metric-based conditions and survive Grafana downtime.
+# Log-derived and business-event alerts live in grafana/alerts/.
+
+groups:
+  - name: ecom_engine_http
+    rules:
+      - alert: HighHttpErrorRate
+        expr: job:ecom_engine_http_5xx_rate_pct:rate1m > 5
+        for: 5m
+        labels:
+          severity: critical
+          service: ecom-engine
+          team: backend
+        annotations:
+          summary: "High 5xx error rate on ecom-engine"
+          description: "5xx error rate is {{ $value | printf \"%.1f\" }}% — above 5% for 5 minutes."
+
+      - alert: NoHttpTraffic
+        expr: absent(ecom_engine_http_requests_total) or job:ecom_engine_http_requests_total:rate1m == 0
+        for: 5m
+        labels:
+          severity: critical
+          service: ecom-engine
+          team: backend
+        annotations:
+          summary: "ecom-engine receiving no HTTP traffic"
+          description: "Request rate has been zero for 5 minutes. Service may be down or unreachable."
+
+      - alert: HighInFlightRequests
+        expr: ecom_engine_http_requests_in_flight > 100
+        for: 2m
+        labels:
+          severity: warning
+          service: ecom-engine
+          team: backend
+        annotations:
+          summary: "ecom-engine has high in-flight request count"
+          description: "{{ $value }} requests in-flight for 2+ minutes — possible handler slowdown or connection leak."
+
+      - alert: HighP99Latency
+        expr: histogram_quantile(0.99, sum by (le) (rate(ecom_engine_http_request_duration_seconds_bucket[5m]))) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: ecom-engine
+          team: backend
+        annotations:
+          summary: "ecom-engine p99 latency above 2s"
+          description: "p99 latency is {{ $value | printf \"%.2f\" }}s over the last 5 minutes."
+
+  - name: ecom_engine_db
+    rules:
+      - alert: DbPoolExhausted
+        expr: job:ecom_engine_db_pool_utilization_pct > 90
+        for: 2m
+        labels:
+          severity: critical
+          service: ecom-engine
+          team: backend
+        annotations:
+          summary: "ecom-engine DB connection pool near exhaustion"
+          description: "Pool utilization is {{ $value | printf \"%.1f\" }}% — acquire timeouts imminent above 90%."
+
+      - alert: DbPoolEmptyAcquires
+        expr: job:ecom_engine_db_pool_empty_acquires:rate1m > 0.5
+        for: 3m
+        labels:
+          severity: warning
+          service: ecom-engine
+          team: backend
+        annotations:
+          summary: "ecom-engine DB pool acquiring on empty pool"
+          description: "{{ $value | printf \"%.2f\" }} empty acquires/s sustained for 3 minutes. Consider increasing pool max size."
+
+  - name: ecom_engine_cache
+    rules:
+      - alert: LowCacheHitRate
+        expr: layer:ecom_engine_cache_hit_rate:rate1m{layer="redis"} < 0.5
+        for: 10m
+        labels:
+          severity: warning
+          service: ecom-engine
+          team: backend
+        annotations:
+          summary: "ecom-engine Redis (L2) cache hit rate below 50%"
+          description: "Redis hit rate is {{ $value | printf \"%.1f%%\" }} for 10 minutes. May indicate cache invalidation storm or cold start."
+
+      - alert: RedisPoolTimeouts
+        expr: rate(ecom_engine_cache_redis_pool_timeouts_total[1m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: ecom-engine
+          team: backend
+        annotations:
+          summary: "ecom-engine Redis connection pool timeouts"
+          description: "Redis pool timing out at {{ $value | printf \"%.2f\" }}/s — Redis may be saturated or unreachable."
+
+  - name: ecom_engine_ratelimit
+    rules:
+      - alert: RateLimitBackendFallback
+        expr: increase(ecom_engine_ratelimit_backend_fallbacks_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: warning
+          service: ecom-engine
+          team: backend
+        annotations:
+          summary: "ecom-engine rate limiter fell back to in-memory"
+          description: "Redis-backed rate limiter has fallen back to in-memory. Per-instance limiting is now active — distributed limiting is not enforced."
+
+  - name: ecom_engine_runtime
+    rules:
+      - alert: HighCpuUsage
+        expr: ecom_engine_process_cpu_percent > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: ecom-engine
+          team: backend
+        annotations:
+          summary: "ecom-engine CPU usage above 80%"
+          description: "Process CPU is {{ $value | printf \"%.1f\" }}% for 5+ minutes. Investigate hot routes or tight loops."
+
+      - alert: CriticalCpuUsage
+        expr: ecom_engine_process_cpu_percent > 95
+        for: 2m
+        labels:
+          severity: critical
+          service: ecom-engine
+          team: backend
+        annotations:
+          summary: "ecom-engine CPU near saturation"
+          description: "Process CPU is {{ $value | printf \"%.1f\" }}% for 2+ minutes. Service may become unresponsive — scale or profile immediately."
+
+      - alert: HighMemoryRSS
+        expr: ecom_engine_process_memory_rss_bytes > 1073741824
+        for: 10m
+        labels:
+          severity: warning
+          service: ecom-engine
+          team: backend
+        annotations:
+          summary: "ecom-engine RSS memory above 1 GiB"
+          description: "Process RSS is {{ $value | humanize1024 }}B for 10+ minutes. Check for memory leaks or oversized in-memory caches."
+
+      - alert: GoroutineLeak
+        expr: ecom_engine_runtime_goroutines > 500
+        for: 15m
+        labels:
+          severity: warning
+          service: ecom-engine
+          team: backend
+        annotations:
+          summary: "ecom-engine goroutine count elevated"
+          description: "{{ $value | printf \"%.0f\" }} goroutines live for 15+ minutes. If monotonically increasing this is a goroutine leak."
+
+      - alert: HighGCPauseRate
+        expr: job:ecom_engine_runtime_gc_pause_rate:rate1m > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: ecom-engine
+          team: backend
+        annotations:
+          summary: "ecom-engine GC pause consuming >50ms/s"
+          description: "GC pause rate is {{ $value | printf \"%.3f\" }}s/s. Sustained GC pressure inflates p99 latency — review heap allocation patterns."

@@ -1,0 +1,91 @@
+{
+  "info": {
+    "_postman_id": "9d6b7f35-1234-4bc8-8c1d-1d2a3f4e5f6b",
+    "name": "Ecom Engine - Payments",
+    "description": "Collection of API endpoints for Payment Intent Creation and Provider Callbacks/Webhooks.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Payment Intent",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"order_id\": \"ord_1234567890\",\n    \"provider\": \"stripe\",\n    \"currency\": \"USD\"\n}"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "description": "Authenticated customer token required",
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "intent"
+          ],
+          "raw": "{{base_url}}/api/payments/intent"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Process Provider Callback",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"event\": \"payment_intent.succeeded\",\n    \"data\": {\n        \"object\": {\n            \"id\": \"pi_123\",\n            \"amount\": 5998\n        }\n    }\n}"
+        },
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "callback",
+            ":provider"
+          ],
+          "raw": "{{base_url}}/api/payments/callback/:provider",
+          "variable": [
+            {
+              "description": "Name of the gateway provider (e.g. stripe, paypal)",
+              "key": "provider",
+              "value": "stripe"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "customer_jwt_here",
+      "type": "string"
+    }
+  ]
+}

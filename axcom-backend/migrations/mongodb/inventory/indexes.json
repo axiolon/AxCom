@@ -1,0 +1,52 @@
+{
+  "collections": [
+    {
+      "name": "stocks",
+      "indexes": [
+        {
+          "keys": { "variant_id": 1, "location_id": 1 },
+          "options": { "unique": true, "name": "uq_stocks_variant_location" }
+        },
+        {
+          "keys": { "location_id": 1 },
+          "options": { "name": "idx_stocks_location_id" }
+        }
+      ]
+    },
+    {
+      "name": "reservations",
+      "indexes": [
+        {
+          "keys": { "variant_id": 1, "location_id": 1 },
+          "options": { "name": "idx_reservations_lookup" }
+        },
+        {
+          "keys": { "expires_at": 1 },
+          "options": { "expireAfterSeconds": 0, "name": "ttl_reservations_expires_at" }
+        }
+      ]
+    },
+    {
+      "name": "stock_history",
+      "indexes": [
+        {
+          "keys": { "variant_id": 1 },
+          "options": { "name": "idx_stock_history_variant_id" }
+        }
+      ]
+    },
+    {
+      "name": "alerts",
+      "indexes": [
+        {
+          "keys": { "variant_id": 1 },
+          "options": { "name": "idx_alerts_variant_id" }
+        },
+        {
+          "keys": { "is_read": 1 },
+          "options": { "name": "idx_alerts_is_read" }
+        }
+      ]
+    }
+  ]
+}

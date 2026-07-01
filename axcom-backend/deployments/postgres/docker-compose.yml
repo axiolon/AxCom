@@ -1,0 +1,78 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+
+# PostgreSQL deployment
+# Prerequisite: docker network create ecom-net
+# Standalone: docker compose up
+# Full mode:  change ./config.yaml to ./config.full.yaml in app volumes
+
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-8080}:8080"
+    env_file:
+      - ../../.env.${APP_ENV:-dev}
+    environment:
+      - DB_TYPE=postgres
+      - DB_CONNECTION_STRING=postgres://postgres:${POSTGRES_PASSWORD:-secret}@db:5432/ecom_db?sslmode=disable
+      - APP_CONFIG=/app/config.yaml
+      - LOG_FORMAT=json
+      - LOG_LEVEL=info
+      - OTEL_ENABLED=true
+      - OTEL_EXPORTER=otlp
+      - OTEL_TRACE_SAMPLE=1.0
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4318
+      - SKIP_RATE_LIMIT=true
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - ecom-net
+      - default
+
+  migrate:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    env_file:
+      - ../../.env.${APP_ENV:-dev}
+    environment:
+      - DB_TYPE=postgres
+      - DB_CONNECTION_STRING=postgres://postgres:${POSTGRES_PASSWORD:-secret}@db:5432/ecom_db?sslmode=disable
+    entrypoint: ["./migrate", "up"]
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-secret}
+      - POSTGRES_DB=ecom_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ecom_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  postgres-data:
+
+networks:
+  ecom-net:
+    external: true

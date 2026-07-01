@@ -1,0 +1,110 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+
+# Monitoring stack: OTel Collector + Prometheus + Loki + Tempo + Grafana
+#
+# Signal routing:
+#   Metrics  — Prometheus scrapes app:8080/metrics directly (prometheus/client_golang)
+#   Logs     — OTel Collector filelog receiver → Loki
+#   Traces   — App OTLP → OTel Collector → Tempo
+#
+# Prerequisite: docker network create ecom-net
+# Usage:        cp .env.example .env && docker compose up -d
+# Cloud option: docker compose -f docker-compose.yml -f docker-compose.cloud.yml up -d
+
+version: '3.8'
+
+services:
+
+  # ── OTel Collector ─────────────────────────────────────────────────────────
+  otelcol:
+    image: otel/opentelemetry-collector-contrib:0.154.0
+    command: ["--config=/etc/otelcol/config.yml"]
+    user: "0:0"
+    volumes:
+      - ./otelcol/otelcol.yml:/etc/otelcol/config.yml:ro
+    ports:
+      - "${OTEL_GRPC_PORT:-4317}:4317"   # OTLP gRPC  (app → collector)
+      - "${OTEL_HTTP_PORT:-4318}:4318"   # OTLP HTTP  (app → collector)
+    depends_on:
+      - loki
+      - tempo
+    networks:
+      - ecom-net
+    restart: unless-stopped
+
+  # ── Prometheus ─────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v3.12.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=30d
+      - --web.enable-remote-write-receiver   # ready for OTel metrics push when SDK added
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    networks:
+      - ecom-net
+    restart: unless-stopped
+
+  # ── Loki ───────────────────────────────────────────────────────────────────
+  loki:
+    image: grafana/loki:3.7.3
+    command: ["-config.file=/etc/loki/config.yml"]
+    volumes:
+      - ./loki/loki.yml:/etc/loki/config.yml:ro
+      - loki-data:/loki
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    networks:
+      - ecom-net
+    restart: unless-stopped
+
+  # ── Tempo ──────────────────────────────────────────────────────────────────
+  tempo:
+    image: grafana/tempo:2.10.7
+    command: ["-config.file=/etc/tempo/config.yml"]
+    volumes:
+      - ./tempo/tempo.yml:/etc/tempo/config.yml:ro
+      - tempo-data:/var/tempo
+    ports:
+      - "${TEMPO_PORT:-3200}:3200"     # Tempo HTTP API / query frontend
+    networks:
+      - ecom-net
+    restart: unless-stopped
+
+  # ── Grafana ────────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:13.1.0
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/var/lib/grafana/dashboards/ecom-engine/service-health.json
+      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    networks:
+      - ecom-net
+    restart: unless-stopped
+
+volumes:
+  prometheus-data:
+  loki-data:
+  tempo-data:
+  grafana-data:
+
+networks:
+  ecom-net:
+    external: true

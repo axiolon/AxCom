@@ -1,0 +1,19 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+
+# Lefthook configuration for license compliance checks
+# For more info: https://github.com/evilmartians/lefthook
+
+pre-commit:
+  parallel: true
+  commands:
+    license-headers:
+      glob: "*.{go,ts,tsx,js,jsx,yml,yaml}"
+      exclude: "(node_modules|dist|.next|vendor|go.mod|go.sum|package-lock.json|package.json|tsconfig.json)"
+      run: go run github.com/google/addlicense@v1.1.1 -c 'Axiolon Labs' -l apache -s=only {staged_files} && git add {staged_files}
+
+    golangci-lint:
+      root: "axcom-backend"
+      glob: "*.go"
+      run: golangci-lint run {staged_files}
+

@@ -1,0 +1,237 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+#
+# Grafana unified alerting — Go runtime and OS process resource alerts.
+
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Runtime Alerts
+    folder: ecom-engine
+    interval: 1m
+    rules:
+      - uid: ecom-alert-high-cpu
+        title: High Process CPU Usage
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "ecom_engine_process_cpu_percent"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [80]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        labels:
+          severity: warning
+          service: ecom-engine
+        annotations:
+          summary: "ecom-engine CPU usage above 80%"
+          description: "Process CPU is at {{ $values.A.Value | printf \"%.1f\" }}% for 5+ minutes. Investigate hot routes or tight loops."
+        isPaused: false
+
+      - uid: ecom-alert-critical-cpu
+        title: Critical Process CPU Usage
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 120
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "ecom_engine_process_cpu_percent"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [95]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        labels:
+          severity: critical
+          service: ecom-engine
+        annotations:
+          summary: "ecom-engine CPU near saturation"
+          description: "Process CPU is at {{ $values.A.Value | printf \"%.1f\" }}% for 2+ minutes. Service may be unresponsive — consider scaling or profiling immediately."
+        isPaused: false
+
+      - uid: ecom-alert-high-memory-rss
+        title: High Process Memory (RSS)
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "ecom_engine_process_memory_rss_bytes"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [1073741824]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 10m
+        labels:
+          severity: warning
+          service: ecom-engine
+        annotations:
+          summary: "ecom-engine RSS memory above 1 GiB"
+          description: "Process RSS is {{ $values.A.Value | humanize1024 }}B for 10+ minutes. Check for memory leaks or oversized caches."
+        isPaused: false
+
+      - uid: ecom-alert-goroutine-leak
+        title: Possible Goroutine Leak
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "ecom_engine_runtime_goroutines"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [500]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 15m
+        labels:
+          severity: warning
+          service: ecom-engine
+        annotations:
+          summary: "ecom-engine goroutine count elevated"
+          description: "{{ $values.A.Value | printf \"%.0f\" }} goroutines live for 15+ minutes. If the count is growing monotonically this is likely a goroutine leak."
+        isPaused: false
+
+      - uid: ecom-alert-high-gc-pause
+        title: High GC Pause Rate
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "rate(ecom_engine_runtime_gc_pause_seconds_total[1m])"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0.05]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        labels:
+          severity: warning
+          service: ecom-engine
+        annotations:
+          summary: "ecom-engine GC pause rate above 50ms/s"
+          description: "GC is consuming {{ $values.A.Value | printf \"%.3f\" }}s of pause time per second. This will inflate p99 latency — check for excessive heap allocation."
+        isPaused: false

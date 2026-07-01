@@ -1,0 +1,2313 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+
+openapi: 3.0.3
+info:
+  title: E-Commerce Engine API
+  description: Comprehensive API specification for Axiolon Labs E-Commerce Engine. All responses wrap payloads in a standardized success/error envelope.
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /api/auth/register:
+    post:
+      summary: Register a new user
+      description: Registers a new customer or administrator account. Defaults to "customer" role.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                role:
+                  type: string
+                  default: customer
+      responses:
+        '200':
+          description: Successful registration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponseEnvelope'
+        '400':
+          description: Validation or payload error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseEnvelope'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseEnvelope'
+
+  /api/auth/login:
+    post:
+      summary: Login and obtain session tokens
+      description: Authenticates user credentials and returns access & refresh tokens.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponseEnvelope'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseEnvelope'
+
+  /api/auth/logout:
+    post:
+      summary: Logout user session
+      description: Revokes the provided refresh token.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Successful logout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/auth/refresh:
+    post:
+      summary: Refresh access token
+      description: Obtains a new session (access & refresh token) using a valid, active refresh token.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh_token
+              properties:
+                refresh_token:
+                  type: string
+      responses:
+        '200':
+          description: Session refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponseEnvelope'
+        '401':
+          description: Token expired or revoked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseEnvelope'
+
+  /api/auth/password-reset:
+    post:
+      summary: Request password reset token
+      description: Initiates password reset flow. Returns reset token directly in response for local/testing.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Reset token generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordResetRequestResponseEnvelope'
+
+  /api/auth/password-reset/confirm:
+    post:
+      summary: Confirm password reset
+      description: Applies the new password using the generated reset token.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - token
+                - new_password
+              properties:
+                token:
+                  type: string
+                new_password:
+                  type: string
+      responses:
+        '200':
+          description: Password reset completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/products:
+    get:
+      summary: List all products
+      description: Retrieves products catalog with optional filters.
+      tags:
+        - Catalog
+      parameters:
+        - name: category_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: price_min
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: price_max
+          in: query
+          required: false
+          schema:
+            type: number
+        - name: attributes
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated query of size:XL,color:blue
+      responses:
+        '200':
+          description: Product list returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponseEnvelope'
+    post:
+      summary: Create a product
+      description: Creates a new product with variants.
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '200':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponseEnvelope'
+
+  /api/products/{id}:
+    get:
+      summary: Get product details
+      tags:
+        - Catalog
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponseEnvelope'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseEnvelope'
+    put:
+      summary: Update a product
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponseEnvelope'
+        '404':
+          description: Product not found
+    delete:
+      summary: Delete a product
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/categories:
+    get:
+      summary: List categories
+      tags:
+        - Catalog
+      responses:
+        '200':
+          description: Category list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryListResponseEnvelope'
+    post:
+      summary: Create a category
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                slug:
+                  type: string
+                parent_id:
+                  type: string
+                  nullable: true
+      responses:
+        '200':
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponseEnvelope'
+
+  /api/categories/{id}:
+    get:
+      summary: Get category details
+      tags:
+        - Catalog
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Category details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponseEnvelope'
+    put:
+      summary: Update a category
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                slug:
+                  type: string
+                parent_id:
+                  type: string
+                  nullable: true
+      responses:
+        '200':
+          description: Category updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponseEnvelope'
+    delete:
+      summary: Delete a category
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Category deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/products/{id}/reviews:
+    get:
+      summary: Get product reviews
+      tags:
+        - Reviews
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of reviews
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewListResponseEnvelope'
+    post:
+      summary: Submit a review
+      tags:
+        - Reviews
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - rating
+                - comment
+              properties:
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                comment:
+                  type: string
+      responses:
+        '200':
+          description: Review submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponseEnvelope'
+
+  /api/products/{id}/reviews/rating:
+    get:
+      summary: Get product average rating summary
+      tags:
+        - Reviews
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Rating summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingSummaryResponseEnvelope'
+
+  /api/cart:
+    get:
+      summary: Retrieve the current customer cart
+      tags:
+        - Shopping Cart
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Cart details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponseEnvelope'
+    post:
+      summary: Add/update item in cart
+      tags:
+        - Shopping Cart
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - variant_id
+                - quantity
+              properties:
+                variant_id:
+                  type: string
+                quantity:
+                  type: integer
+                price:
+                  type: number
+      responses:
+        '200':
+          description: Cart updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponseEnvelope'
+    delete:
+      summary: Clear cart items
+      tags:
+        - Shopping Cart
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Cart cleared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/orders:
+    post:
+      summary: Create order from items
+      tags:
+        - Orders
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - items
+              properties:
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/OrderItemRequest'
+      responses:
+        '200':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOrderResponseEnvelope'
+    get:
+      summary: List authenticated user's orders
+      tags:
+        - Orders
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of user orders
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOrderListResponseEnvelope'
+
+  /api/orders/{id}:
+    get:
+      summary: Get customer order by ID
+      tags:
+        - Orders
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOrderResponseEnvelope'
+
+  /api/orders/guest:
+    post:
+      summary: Place order as guest
+      tags:
+        - Orders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - guest_info
+                - items
+              properties:
+                guest_info:
+                  type: object
+                  required:
+                    - name
+                    - email
+                    - contact_number
+                  properties:
+                    name:
+                      type: string
+                    email:
+                      type: string
+                      format: email
+                    contact_number:
+                      type: string
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/OrderItemRequest'
+      responses:
+        '200':
+          description: Guest order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuestOrderResponseEnvelope'
+
+  /api/inventory/{variantID}:
+    get:
+      summary: Check stock level of a variant
+      tags:
+        - Inventory
+      parameters:
+        - name: variantID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: location_id
+          in: query
+          required: false
+          schema:
+            type: string
+            default: default
+      responses:
+        '200':
+          description: Stock status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockCheckResponseEnvelope'
+    delete:
+      summary: Delete stock item record
+      tags:
+        - Inventory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: variantID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: location_id
+          in: query
+          required: false
+          schema:
+            type: string
+            default: default
+      responses:
+        '200':
+          description: Stock deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/inventory:
+    get:
+      summary: List inventory levels
+      tags:
+        - Inventory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: variant_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: location_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of stocks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockListResponseEnvelope'
+
+  /api/inventory/alerts:
+    get:
+      summary: Get inventory alerts
+      tags:
+        - Inventory
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of alerts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertListResponseEnvelope'
+
+  /api/inventory/update:
+    post:
+      summary: Update stock quantity
+      tags:
+        - Inventory
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - variant_id
+                - quantity
+              properties:
+                variant_id:
+                  type: string
+                location_id:
+                  type: string
+                  default: default
+                quantity:
+                  type: integer
+                  minimum: 0
+      responses:
+        '200':
+          description: Stock updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/inventory/configure:
+    post:
+      summary: Configure stock thresholds/backorders
+      tags:
+        - Inventory
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - variant_id
+              properties:
+                variant_id:
+                  type: string
+                location_id:
+                  type: string
+                quantity:
+                  type: integer
+                low_stock_threshold:
+                  type: integer
+                allow_backorders:
+                  type: boolean
+                backorder_limit:
+                  type: integer
+      responses:
+        '200':
+          description: Configuration updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/admin/dashboard:
+    get:
+      summary: Get admin dashboard stats
+      tags:
+        - Admin
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminDashboardResponseEnvelope'
+
+  /api/admin/orders:
+    get:
+      summary: List all system orders
+      tags:
+        - Admin
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of all orders
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminOrderListResponseEnvelope'
+
+  /api/admin/orders/{id}:
+    get:
+      summary: Get any order by ID
+      tags:
+        - Admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminOrderResponseEnvelope'
+
+  /api/admin/orders/{id}/transition:
+    post:
+      summary: Transition order status
+      tags:
+        - Admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - action
+              properties:
+                action:
+                  type: string
+      responses:
+        '200':
+          description: Order state updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminOrderResponseEnvelope'
+
+  /api/notifications/send:
+    post:
+      summary: Send notification to user
+      tags:
+        - Notifications
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+                - type
+                - message
+              properties:
+                user_id:
+                  type: string
+                type:
+                  type: string
+                message:
+                  type: string
+      responses:
+        '200':
+          description: Notification dispatched
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationResponseEnvelope'
+
+  /api/products/search:
+    get:
+      summary: Search products
+      tags:
+        - Catalog
+      responses:
+        '200':
+          description: List of products matching search criteria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponseEnvelope'
+
+  /api/products/{id}/images/presign:
+    post:
+      summary: Get presigned upload URL for product image
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Presigned URL details
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/products/{id}/images/register:
+    post:
+      summary: Register uploaded product image
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Image registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponseEnvelope'
+
+  /api/products/{id}/images/{imageId}:
+    delete:
+      summary: Delete product image
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: imageId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Image deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/products/{id}/images/{imageId}/primary:
+    put:
+      summary: Set image as primary product image
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: imageId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Primary image set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductResponseEnvelope'
+
+  /api/products/{id}/variants:
+    get:
+      summary: Get product variants
+      tags:
+        - Catalog
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of variants
+    post:
+      summary: Add product variant
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Variant added
+
+  /api/products/{id}/variants/{variantId}:
+    put:
+      summary: Update product variant
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: variantId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Variant updated
+    delete:
+      summary: Delete product variant
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: variantId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Variant deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/products/{id}/discount:
+    post:
+      summary: Apply product discount
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Discount applied
+    delete:
+      summary: Remove product discount
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Discount removed
+
+  /api/products/bulk:
+    post:
+      summary: Bulk create products
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Products created
+    put:
+      summary: Bulk update products
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Products updated
+    delete:
+      summary: Bulk delete products
+      tags:
+        - Catalog
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Products deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/products/{id}/reviews/{reviewId}:
+    put:
+      summary: Update product review
+      tags:
+        - Reviews
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: reviewId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Review updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewResponseEnvelope'
+    delete:
+      summary: Delete product review
+      tags:
+        - Reviews
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: reviewId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Review deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/products/{id}/reviews/{reviewId}/reply:
+    post:
+      summary: Reply to product review
+      tags:
+        - Reviews
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: reviewId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reply submitted
+
+  /api/cart/count:
+    get:
+      summary: Get cart item count
+      tags:
+        - Shopping Cart
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Cart count details
+
+  /api/cart/items/{variantId}:
+    put:
+      summary: Update cart item quantity/price
+      tags:
+        - Shopping Cart
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: variantId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cart updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponseEnvelope'
+    delete:
+      summary: Remove cart item
+      tags:
+        - Shopping Cart
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: variantId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cart updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponseEnvelope'
+
+  /api/cart/merge:
+    post:
+      summary: Merge carts
+      tags:
+        - Shopping Cart
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Cart merged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponseEnvelope'
+
+  /api/orders/{id}/cancel:
+    post:
+      summary: Cancel order
+      tags:
+        - Orders
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order canceled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOrderResponseEnvelope'
+
+  /api/inventory/transfer:
+    post:
+      summary: Transfer inventory stock
+      tags:
+        - Inventory
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Inventory transferred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/inventory/sync:
+    post:
+      summary: Sync inventory stock
+      tags:
+        - Inventory
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Inventory synchronized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/inventory/{variantID}/reserve:
+    post:
+      summary: Reserve inventory stock
+      tags:
+        - Inventory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: variantID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Inventory reserved
+
+  /api/inventory/{variantID}/reserve/{reservationID}:
+    delete:
+      summary: Release inventory reservation
+      tags:
+        - Inventory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: variantID
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: reservationID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Inventory reservation released
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/inventory/bulk-update:
+    post:
+      summary: Bulk update inventory stock
+      tags:
+        - Inventory
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Inventory updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/inventory/{variantID}/adjust:
+    post:
+      summary: Adjust stock level
+      tags:
+        - Inventory
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: variantID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stock adjusted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/inventory/low-stock:
+    get:
+      summary: Retrieve low stock inventory items
+      tags:
+        - Inventory
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of low stock items
+
+  /api/inventory/export:
+    get:
+      summary: Export stock records
+      tags:
+        - Inventory
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Inventory exported
+
+  /api/shipping/rates:
+    post:
+      summary: Calculate shipping rates
+      tags:
+        - Shipping
+      responses:
+        '200':
+          description: Shipping rates calculated
+
+  /api/shipping/track/{tracking_number}:
+    get:
+      summary: Track shipment status
+      tags:
+        - Shipping
+      parameters:
+        - name: tracking_number
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Shipment status retrieved
+
+  /api/shipping/order/{order_id}:
+    get:
+      summary: Get order shipment details
+      tags:
+        - Shipping
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order shipment details
+
+  /api/admin/shipping:
+    get:
+      summary: List all shipments
+      tags:
+        - Admin
+        - Shipping
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of shipments
+    post:
+      summary: Create shipment record
+      tags:
+        - Admin
+        - Shipping
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Shipment created
+
+  /api/admin/shipping/{id}:
+    put:
+      summary: Update shipment status
+      tags:
+        - Admin
+        - Shipping
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Shipment updated
+    delete:
+      summary: Delete shipment record
+      tags:
+        - Admin
+        - Shipping
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Shipment deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponseEnvelope'
+
+  /api/payments/callback/{provider}:
+    post:
+      summary: Payment provider webhook callback
+      tags:
+        - Payments
+      parameters:
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Webhook received and processed
+
+  /api/payments/intent:
+    post:
+      summary: Create checkout payment intent
+      tags:
+        - Payments
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Intent created
+
+  /api/payments:
+    get:
+      summary: List customer payments
+      tags:
+        - Payments
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of user payments
+
+  /api/payments/by-order/{orderID}:
+    get:
+      summary: Get payment details by order ID
+      tags:
+        - Payments
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: orderID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment details
+
+  /api/admin/payments:
+    get:
+      summary: List system payments
+      tags:
+        - Admin
+        - Payments
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of payments
+
+  /api/admin/payments/refund:
+    post:
+      summary: Refund payment
+      tags:
+        - Admin
+        - Payments
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Refund requested
+
+  /api/admin/payments/{id}:
+    get:
+      summary: Get system payment details by ID
+      tags:
+        - Admin
+        - Payments
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment details
+
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Standard envelopes
+    ErrorResponseEnvelope:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: Something went wrong.
+
+    MessageResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+              example: Operation completed successfully.
+
+    # Auth schemas
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Session:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+
+    RegisterResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/User'
+
+    SessionResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/Session'
+
+    PasswordResetRequestResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+            reset_token:
+              type: string
+            expires_at:
+              type: string
+              format: date-time
+
+    # Product schemas
+    Variant:
+      type: object
+      properties:
+        id:
+          type: string
+        sku:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+        attributes:
+          type: object
+          additionalProperties:
+            type: string
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        category_id:
+          type: string
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Variant'
+
+    ProductResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/Product'
+
+    ProductListResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+
+    CreateProductRequest:
+      type: object
+      required:
+        - name
+        - category_id
+        - variants
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        category_id:
+          type: string
+        variants:
+          type: array
+          items:
+            type: object
+            required:
+              - sku
+              - name
+              - price
+            properties:
+              id:
+                type: string
+              sku:
+                type: string
+              name:
+                type: string
+              price:
+                type: number
+              attributes:
+                type: object
+                additionalProperties:
+                  type: string
+
+    # Category schemas
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        parent_id:
+          type: string
+          nullable: true
+
+    CategoryResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/Category'
+
+    CategoryListResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+
+    # Review schemas
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+        product_id:
+          type: string
+        user_id:
+          type: string
+        rating:
+          type: integer
+        comment:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    ReviewResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/Review'
+
+    ReviewListResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Review'
+
+    RatingSummaryResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            product_id:
+              type: string
+            average_rating:
+              type: number
+            review_count:
+              type: integer
+
+    # Cart schemas
+    CartItem:
+      type: object
+      properties:
+        variant_id:
+          type: string
+        quantity:
+          type: integer
+        price:
+          type: number
+
+    Cart:
+      type: object
+      properties:
+        customer_id:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+
+    CartResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/Cart'
+
+    # Order schemas
+    OrderItemRequest:
+      type: object
+      required:
+        - variant_id
+        - quantity
+        - price
+      properties:
+        variant_id:
+          type: string
+        quantity:
+          type: integer
+        price:
+          type: number
+
+    OrderItem:
+      type: object
+      properties:
+        variant_id:
+          type: string
+        quantity:
+          type: integer
+        price:
+          type: number
+
+    UserOrder:
+      type: object
+      properties:
+        id:
+          type: string
+        total:
+          type: number
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+
+    UserOrderResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/UserOrder'
+
+    UserOrderListResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            orders:
+              type: array
+              items:
+                $ref: '#/components/schemas/UserOrder'
+            count:
+              type: integer
+
+    GuestInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        contact_number:
+          type: string
+
+    GuestOrder:
+      type: object
+      properties:
+        order_id:
+          type: string
+        status:
+          type: string
+        total:
+          type: number
+        created_at:
+          type: string
+          format: date-time
+        guest_info:
+          $ref: '#/components/schemas/GuestInfo'
+
+    GuestOrderResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/GuestOrder'
+
+    # Admin Order schemas
+    AdminOrder:
+      type: object
+      properties:
+        id:
+          type: string
+        customer_id:
+          type: string
+        guest_info:
+          $ref: '#/components/schemas/GuestInfo'
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        total:
+          type: number
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    AdminOrderResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/AdminOrder'
+
+    AdminOrderListResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            orders:
+              type: array
+              items:
+                $ref: '#/components/schemas/AdminOrder'
+            count:
+              type: integer
+
+    # Inventory schemas
+    StockItem:
+      type: object
+      properties:
+        variant_id:
+          type: string
+        location_id:
+          type: string
+        quantity:
+          type: integer
+        low_stock_threshold:
+          type: integer
+        allow_backorders:
+          type: boolean
+        backorder_limit:
+          type: integer
+        is_low_stock:
+          type: boolean
+
+    StockListResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/StockItem'
+
+    StockCheckResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            variant_id:
+              type: string
+            location_id:
+              type: string
+            quantity:
+              type: integer
+
+    Alert:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        message:
+          type: string
+        variant_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        is_read:
+          type: boolean
+
+    AlertListResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            alerts:
+              type: array
+              items:
+                $ref: '#/components/schemas/Alert'
+
+    # Admin dashboard stats
+    AdminDashboardResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          properties:
+            total_sales:
+              type: number
+            pending_orders:
+              type: integer
+            low_stock_skus:
+              type: array
+              items:
+                type: string
+            active_users:
+              type: integer
+
+    # Notification schemas
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        type:
+          type: string
+        message:
+          type: string
+        sent_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+
+    NotificationResponseEnvelope:
+      type: object
+      required:
+        - success
+        - data
+      properties:
+        success:
+          type: boolean
+        data:
+          $ref: '#/components/schemas/Notification'

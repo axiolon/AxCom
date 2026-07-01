@@ -1,0 +1,22 @@
+{
+  "collections": [
+    {
+      "name": "outbox",
+      "indexes": [
+        {
+          "keys": { "published_at": 1, "created_at": 1 },
+          "options": { "name": "idx_outbox_unpublished", "sparse": true }
+        }
+      ]
+    },
+    {
+      "name": "processed_events",
+      "indexes": [
+        {
+          "keys": { "processed_at": 1 },
+          "options": { "expireAfterSeconds": 604800, "name": "ttl_processed_events_cleanup" }
+        }
+      ]
+    }
+  ]
+}

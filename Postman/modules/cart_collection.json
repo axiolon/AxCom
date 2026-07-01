@@ -1,0 +1,230 @@
+{
+  "info": {
+    "_postman_id": "e1c6cc0f-2cb8-4a87-bde4-254d2c5a8e8a",
+    "name": "Ecom Engine - Cart",
+    "description": "Postman collection for testing the cart endpoints in the ecom-engine API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Cart",
+      "request": {
+        "description": "Retrieves the authenticated user's shopping cart. Requires a valid access token.",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "GET",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cart"
+          ],
+          "raw": "{{base_url}}/api/cart"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Add Item to Cart",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"variant_id\": \"var_123\",\n    \"quantity\": 2\n}"
+        },
+        "description": "Adds a product variant to the authenticated user's cart. Quantity must be greater than zero.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cart"
+          ],
+          "raw": "{{base_url}}/api/cart"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Cart Item Quantity",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"quantity\": 5\n}"
+        },
+        "description": "Updates the quantity of a specific variant in the authenticated user's cart. Variant ID is required in the path.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "PUT",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cart",
+            "items",
+            "{{variant_id}}"
+          ],
+          "raw": "{{base_url}}/api/cart/items/{{variant_id}}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Remove Item from Cart",
+      "request": {
+        "description": "Removes the specified variant from the authenticated user's cart.",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "DELETE",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cart",
+            "items",
+            "{{variant_id}}"
+          ],
+          "raw": "{{base_url}}/api/cart/items/{{variant_id}}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Clear Cart",
+      "request": {
+        "description": "Clears all items from the authenticated user's shopping cart.",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "DELETE",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cart"
+          ],
+          "raw": "{{base_url}}/api/cart"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Cart Count",
+      "request": {
+        "description": "Retrieves the total number of items in the authenticated user's cart. Lightweight endpoint useful for navbar badges.",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "GET",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cart",
+            "count"
+          ],
+          "raw": "{{base_url}}/api/cart/count"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Merge Cart",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"guest_cart_id\": \"guest_123\"\n}"
+        },
+        "description": "Merges a guest cart with the authenticated user's account cart. Use this endpoint on login to combine guest shopping activity with the user account.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "cart",
+            "merge"
+          ],
+          "raw": "{{base_url}}/api/cart/merge"
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "variant_id",
+      "value": "var_123",
+      "type": "string"
+    },
+    {
+      "key": "guest_cart_id",
+      "value": "guest_123",
+      "type": "string"
+    }
+  ]
+}

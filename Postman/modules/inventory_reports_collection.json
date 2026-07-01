@@ -1,0 +1,67 @@
+{
+  "info": {
+    "_postman_id": "c1a898b9-5f2c-4a37-b957-61c02abdfcf9",
+    "name": "Ecom Engine - Inventory (Reports)",
+    "description": "Postman collection for retrieving inventory low stock reports and exporting entire inventory states to CSV.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Low Stock Items Report",
+      "request": {
+        "description": "Lists all inventory stock items where the quantity is strictly less than or equal to their low-stock threshold. Requires authentication.",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "GET",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory",
+            "low-stock"
+          ],
+          "raw": "{{base_url}}/api/inventory/low-stock"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Export Inventory CSV",
+      "request": {
+        "description": "Generates a CSV attachment download containing all catalog items, location codes, and stock parameters. Requires authentication.",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "GET",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory",
+            "export"
+          ],
+          "raw": "{{base_url}}/api/inventory/export"
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

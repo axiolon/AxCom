@@ -1,0 +1,122 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+
+# ============================================================================
+# Load-Test Stack — Resource-Constrained
+# ============================================================================
+#
+# Simulates a production-like environment with hard resource limits:
+#   - App:  2 CPUs, 1 GB RAM
+#   - DB:   1 CPU,  512 MB RAM (WiredTiger cache capped at 256 MB)
+#
+# k6 runs on the HOST machine (not inside Docker) so it doesn't steal
+# resources from the system under test.
+#
+# Usage:
+#   docker network create ecom-net 2>$null    # idempotent
+#   docker compose up -d --build
+#   docker compose ps                         # wait for healthy
+#   k6 run ../../load-tests/scenarios/max-concurrency.js
+#   docker stats --no-stream                  # check resource usage
+#   docker compose down -v                    # cleanup
+# ============================================================================
+
+services:
+  app:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      - DB_CONNECTION_STRING=mongodb://db:27017/ecom_loadtest?replicaSet=rs0&directConnection=true
+      - APP_CONFIG=/app/config.yaml
+      - LOG_FORMAT=json
+      - LOG_LEVEL=info
+      - OTEL_ENABLED=false
+      - SKIP_RATE_LIMIT=true
+      # Go runtime tuning for constrained memory
+      - GOMEMLIMIT=900MiB
+      - GOMAXPROCS=2
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1g
+        reservations:
+          cpus: '1.0'
+          memory: 512m
+    networks:
+      - ecom-net
+      - default
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  db:
+    image: mongo:latest
+    command:
+      - "--replSet"
+      - "rs0"
+      - "--bind_ip_all"
+      - "--wiredTigerCacheSizeGB"
+      - "0.25"
+    ports:
+      - "${MONGO_PORT:-27018}:27017"
+    volumes:
+      - loadtest-mongo-data:/data/db
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512m
+        reservations:
+          cpus: '0.5'
+          memory: 256m
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  db-init:
+    image: mongo:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint:
+      - mongosh
+      - --host
+      - db:27017
+      - --eval
+      - |
+        try {
+          rs.status();
+          console.log("Replica set already initialized.");
+        } catch (err) {
+          console.log("Initializing replica set...");
+          rs.initiate({
+            _id: "rs0",
+            members: [
+              { _id: 0, host: "db:27017" }
+            ]
+          });
+        }
+
+volumes:
+  loadtest-mongo-data:
+
+networks:
+  ecom-net:
+    name: ecom-net

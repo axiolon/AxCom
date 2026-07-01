@@ -1,0 +1,175 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+
+# ecom-engine configuration template.
+# Copy this file to config.yaml and fill in your values.
+# Environment variables override any value here (useful for secrets in production).
+
+port: "8080"
+secret: "CHANGE_ME_use_a_long_random_string"
+service_name: "ecom-engine"
+max_request_size: 5242880  # bytes — 5 MB default
+
+# ---------------------------------------------------------------------------
+# Metrics  (internal Prometheus server — never expose this port publicly)
+# ---------------------------------------------------------------------------
+metrics:
+  enabled: true
+  addr: ":9090"            # internal-only port for /metrics (env: METRICS_ADDR)
+
+# ---------------------------------------------------------------------------
+# Auth  (always active — cannot be disabled)
+# ---------------------------------------------------------------------------
+auth:
+  mode: local          # "local" (JWT) or "oidc" (external IdP)
+  oidc_issuer: ""      # required when mode=oidc, e.g. https://accounts.google.com
+  oidc_audience: ""    # required when mode=oidc
+  oidc_jwks_url: ""    # optional override; auto-discovered via /.well-known/openid-configuration
+
+# ---------------------------------------------------------------------------
+# Database  (global — all modules use the same DB)
+# ---------------------------------------------------------------------------
+db:
+  type: mongodb                              # "mongodb" or "postgres"
+  connection_string: "mongodb://localhost:27017?replicaSet=rs0&directConnection=true"
+  database: ecom_db
+
+  # --- Connection Pool Sizing ---
+  max_pool_size: 25                          # Maximum open database connections
+  min_pool_size: 5                           # Minimum idle connections kept warm
+
+  # --- Connection Pool Lifecycles & Timeouts ---
+  max_conn_idle_time: 15m                    # Close idle connections after this duration (e.g. 15m, 1h)
+  max_conn_lifetime: 1h                      # Maximum age of any connection before retiring it
+  max_conn_lifetime_jitter: 2m               # Randomize connection expiry to avoid all closing together (+/- jitter)
+  connect_timeout: 10s                       # Database dial timeout
+  pool_acquire_timeout: 5s                   # Maximum time waiting for an available connection from pool
+  health_check_interval: 30s                 # Frequency of background liveness checks for connections
+
+  # --- Query & Transaction Safety ---
+  query_timeout: 30s                         # Maximum execution time for individual queries
+  transaction_timeout: 60s                   # Maximum lifetime of a transaction
+
+  # --- Startup Retry ---
+  retry_max_attempts: 20                     # Connection retry attempts during boot
+  retry_initial_delay: 1s                    # Backoff starting delay
+  retry_max_delay: 30s                       # Maximum backoff retry delay
+
+  # --- PostgreSQL Specific (uncomment if using postgres) ---
+  # ssl_mode: "disable"                      # sslmode for Postgres (disable, require, verify-full, etc.)
+  # application_name: "ecom-engine"           # shown in pg_stat_activity
+  # statement_timeout: 0s                    # pg server statement_timeout (0 = none)
+  # lock_timeout: 0s                         # pg server lock_timeout (0 = none)
+
+  # --- MongoDB Specific (uncomment/configure if using mongodb) ---
+  # server_selection_timeout: 10s            # MongoDB server selection timeout
+  # socket_timeout: 30s                      # MongoDB socket timeout
+  # retry_writes: true                       # Enable retryable writes
+  # retry_reads: true                        # Enable retryable reads
+  # write_concern: "majority"                # "majority" or "1"
+  # read_preference: "primary"               # "primary", "secondary", "nearest"
+
+# ---------------------------------------------------------------------------
+# Cache
+# ---------------------------------------------------------------------------
+cache:
+  type: memory           # "memory" (development) or "redis" (production)
+  addr: "localhost:6379" # Redis host:port (ignored when type=memory)
+  password: ""
+  db: 0
+  pool_size: 10
+  l1_ttl: 5m            # L1 in-memory layer TTL (Go duration string)
+  l1_max_items: 10000   # L1 in-memory layer max entries
+
+# ---------------------------------------------------------------------------
+# File Storage
+# ---------------------------------------------------------------------------
+storage:
+  provider: local   # "local", "s3", or "r2"
+  bucket: products
+  region: us-east-1
+  account_id: ""    # Cloudflare R2 account ID (r2 only)
+  # access_key_id: ""      # Static credential override (highly recommended to use env variables instead)
+  # secret_access_key: ""  # Static credential override (highly recommended to use env variables instead)
+
+# ---------------------------------------------------------------------------
+# Events
+# ---------------------------------------------------------------------------
+events:
+  provider: local   # "local" | "kafka" | "rabbitmq"
+
+  retry:
+    max_retries: 3
+    initial_backoff: 50ms
+    max_backoff: 2s
+
+  local:
+    dlq_buffer_size: 100
+
+  kafka:
+    brokers:
+      - "localhost:9092"
+    group_id: ecom-engine-group
+    client_id: ecom-engine-client
+    dlq_topic: events.dlq
+    auto_offset_old: true   # false = latest offset
+
+  rabbitmq:
+    url: "amqp://guest:guest@localhost:5672/"
+    exchange_name: ecom_events
+    exchange_type: topic
+    queue_name: ecom_queue
+    dlq_exchange: ecom_events_dlq
+    dlq_queue: ecom_queue_dlq
+
+# ---------------------------------------------------------------------------
+# Modules
+# All modules default to enabled when this section is absent.
+# Disable a module with:  enabled: false
+# Disable a feature with: features.<name>: false
+# ---------------------------------------------------------------------------
+modules:
+  catalog:
+    enabled: true
+    features:
+      images: true
+      variants: true
+      discounts: true
+      bulk: true
+      reviews: true
+
+  inventory:
+    enabled: true
+    features:
+      bulk: true
+      history: true
+      reservation: true
+      reports: true
+      transfer: true
+      adjustment: true
+      sync: true
+
+  cart:
+    enabled: true
+
+  orders:
+    enabled: true
+
+  payments:
+    enabled: true
+    provider: stripe     # "stripe" | "paypal" | "payhere"
+    api_key: ""          # set via PAYMENT_API_KEY env var in production
+
+  shipping:
+    enabled: true
+    providers:
+      - type: flatrate
+        rate: 5.0
+      - type: freeabove
+        threshold: 50.0
+      - type: weightbased
+        base_rate: 2.0
+        per_kg: 1.5
+
+  notifications:
+    enabled: true

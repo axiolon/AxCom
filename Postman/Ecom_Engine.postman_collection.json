@@ -1,0 +1,2152 @@
+{
+  "info": {
+    "_postman_id": "ecom-engine-unified-collection-id",
+    "name": "Ecom Engine - Unified API Collection",
+    "description": "Consolidated Postman collection containing endpoints for Auth, Cart, Catalog, Inventory, Orders, and Payments modules.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "description": "Authentication and user management services.",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"Password123\",\n    \"role\": \"customer\"\n}"
+            },
+            "description": "Registers a new user account with a secure password and optional user role.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ],
+              "raw": "{{base_url}}/api/auth/register"
+            }
+          },
+          "response": []
+        },
+        {
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.access_token) {",
+                  "    pm.environment.set(\"access_token\", jsonData.access_token);",
+                  "}",
+                  "if (jsonData.refresh_token) {",
+                  "    pm.environment.set(\"refresh_token\", jsonData.refresh_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "name": "Login User",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"Password123\"\n}"
+            },
+            "description": "Authenticates user credentials and generates access and refresh tokens. Saves tokens to the active environment.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ],
+              "raw": "{{base_url}}/api/auth/login"
+            }
+          },
+          "response": []
+        },
+        {
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.access_token) {",
+                  "    pm.environment.set(\"access_token\", jsonData.access_token);",
+                  "}",
+                  "if (jsonData.refresh_token) {",
+                  "    pm.environment.set(\"refresh_token\", jsonData.refresh_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "name": "Refresh Session",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}"
+            },
+            "description": "Uses a valid refresh token to rotate the session and request a fresh access and refresh token.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ],
+              "raw": "{{base_url}}/api/auth/refresh"
+            }
+          },
+          "response": []
+        },
+        {
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.reset_token) {",
+                  "    pm.environment.set(\"reset_token\", jsonData.reset_token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "name": "Request Password Reset",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"user@example.com\"\n}"
+            },
+            "description": "Generates a reset token for the specified user email. For testing/dev convenience, the token is returned in the JSON payload.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "password-reset"
+              ],
+              "raw": "{{base_url}}/api/auth/password-reset"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm Password Reset",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"token\": \"{{reset_token}}\",\n    \"new_password\": \"NewPassword123\"\n}"
+            },
+            "description": "Completes the password recovery cycle using the generated reset token and a new strong password.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "password-reset",
+                "confirm"
+              ],
+              "raw": "{{base_url}}/api/auth/password-reset/confirm"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Logout User",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}"
+            },
+            "description": "Revokes the active refresh token, immediately logging the user session out.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ],
+              "raw": "{{base_url}}/api/auth/logout"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "description": "Shopping cart management services.",
+      "item": [
+        {
+          "name": "Get Cart",
+          "request": {
+            "description": "Retrieves the authenticated user's shopping cart. Requires a valid access token.",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "GET",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart"
+              ],
+              "raw": "{{base_url}}/api/cart"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Item to Cart",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"variant_id\": \"var_123\",\n    \"quantity\": 2\n}"
+            },
+            "description": "Adds a product variant to the authenticated user's cart. Quantity must be greater than zero.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "POST",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart"
+              ],
+              "raw": "{{base_url}}/api/cart"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Cart Item Quantity",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"quantity\": 5\n}"
+            },
+            "description": "Updates the quantity of a specific variant in the authenticated user's cart. Variant ID is required in the path.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "PUT",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart",
+                "items",
+                "{{variant_id}}"
+              ],
+              "raw": "{{base_url}}/api/cart/items/{{variant_id}}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Remove Item from Cart",
+          "request": {
+            "description": "Removes the specified variant from the authenticated user's cart.",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "DELETE",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart",
+                "items",
+                "{{variant_id}}"
+              ],
+              "raw": "{{base_url}}/api/cart/items/{{variant_id}}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Clear Cart",
+          "request": {
+            "description": "Clears all items from the authenticated user's shopping cart.",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "DELETE",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart"
+              ],
+              "raw": "{{base_url}}/api/cart"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Cart Count",
+          "request": {
+            "description": "Retrieves the total number of items in the authenticated user's cart. Lightweight endpoint useful for navbar badges.",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "GET",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart",
+                "count"
+              ],
+              "raw": "{{base_url}}/api/cart/count"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Merge Cart",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"guest_cart_id\": \"guest_123\"\n}"
+            },
+            "description": "Merges a guest cart with the authenticated user's account cart. Use this endpoint on login to combine guest shopping activity with the user account.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "POST",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "cart",
+                "merge"
+              ],
+              "raw": "{{base_url}}/api/cart/merge"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Catalog",
+      "description": "Product catalog and category management services.",
+      "item": [
+        {
+          "name": "Core",
+          "item": [
+            {
+              "item": [
+                {
+                  "name": "List Products",
+                  "request": {
+                    "description": "Retrieves products list with optional category, inStock, price range, and search filters.",
+                    "header": [],
+                    "method": "GET",
+                    "url": {
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "products"
+                      ],
+                      "query": [
+                        {
+                          "key": "category_id",
+                          "value": ""
+                        },
+                        {
+                          "key": "inStock",
+                          "value": "true"
+                        },
+                        {
+                          "key": "q",
+                          "value": ""
+                        }
+                      ],
+                      "raw": "{{base_url}}/api/products?category_id=\u0026inStock=true\u0026q="
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Search Products Alias",
+                  "request": {
+                    "description": "Alias endpoint for searching products by query parameters.",
+                    "header": [],
+                    "method": "GET",
+                    "url": {
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "products",
+                        "search"
+                      ],
+                      "query": [
+                        {
+                          "key": "q",
+                          "value": "phone"
+                        }
+                      ],
+                      "raw": "{{base_url}}/api/products/search?q=phone"
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get Product By ID",
+                  "request": {
+                    "description": "Retrieves a single product details by its unique identifier.",
+                    "header": [],
+                    "method": "GET",
+                    "url": {
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "products",
+                        "prod_123"
+                      ],
+                      "raw": "{{base_url}}/api/products/prod_123"
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Create Product",
+                  "request": {
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"name\": \"Smartphone X\",\n    \"description\": \"Flagship phone\",\n    \"category_id\": \"cat_123\",\n    \"variants\": [\n        {\n            \"sku\": \"SM-X-01\",\n            \"name\": \"Black 128GB\",\n            \"price\": 999.99\n        }\n    ]\n}"
+                    },
+                    "description": "Creates a new catalog product with its associated variants. Requires authenticated token.",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                      }
+                    ],
+                    "method": "POST",
+                    "url": {
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "products"
+                      ],
+                      "raw": "{{base_url}}/api/products"
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Update Product",
+                  "request": {
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"name\": \"Smartphone X Pro\",\n    \"description\": \"Updated details\",\n    \"category_id\": \"cat_123\",\n    \"variants\": [\n        {\n            \"sku\": \"SM-X-01\",\n            \"name\": \"Black 128GB\",\n            \"price\": 1049.99\n        }\n    ]\n}"
+                    },
+                    "description": "Updates an existing product's fields and variant pricing. Requires authenticated token.",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                      }
+                    ],
+                    "method": "PUT",
+                    "url": {
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "products",
+                        "prod_123"
+                      ],
+                      "raw": "{{base_url}}/api/products/prod_123"
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Delete Product",
+                  "request": {
+                    "description": "Deletes a product from the catalog by ID. Requires authenticated token.",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                      }
+                    ],
+                    "method": "DELETE",
+                    "url": {
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "products",
+                        "prod_123"
+                      ],
+                      "raw": "{{base_url}}/api/products/prod_123"
+                    }
+                  },
+                  "response": []
+                }
+              ],
+              "name": "Products"
+            },
+            {
+              "item": [
+                {
+                  "name": "List Categories",
+                  "request": {
+                    "description": "Lists all configured categories in the system.",
+                    "header": [],
+                    "method": "GET",
+                    "url": {
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "categories"
+                      ],
+                      "raw": "{{base_url}}/api/categories"
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Get Category By ID",
+                  "request": {
+                    "description": "Retrieves details of a single category by ID.",
+                    "header": [],
+                    "method": "GET",
+                    "url": {
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "categories",
+                        "cat_123"
+                      ],
+                      "raw": "{{base_url}}/api/categories/cat_123"
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Create Category",
+                  "request": {
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"name\": \"Mobile Phones\",\n    \"slug\": \"mobile-phones\",\n    \"parent_id\": null\n}"
+                    },
+                    "description": "Creates a new category. Allows nesting via parent_id. Requires authenticated token.",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                      }
+                    ],
+                    "method": "POST",
+                    "url": {
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "categories"
+                      ],
+                      "raw": "{{base_url}}/api/categories"
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Update Category",
+                  "request": {
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n    \"name\": \"Smartphones\",\n    \"slug\": \"smartphones\",\n    \"parent_id\": null\n}"
+                    },
+                    "description": "Updates details of a category. Requires authenticated token.",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      },
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                      }
+                    ],
+                    "method": "PUT",
+                    "url": {
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "categories",
+                        "cat_123"
+                      ],
+                      "raw": "{{base_url}}/api/categories/cat_123"
+                    }
+                  },
+                  "response": []
+                },
+                {
+                  "name": "Delete Category",
+                  "request": {
+                    "description": "Deletes a category if it has no active products or child subcategories. Requires authenticated token.",
+                    "header": [
+                      {
+                        "key": "Authorization",
+                        "value": "Bearer {{access_token}}"
+                      }
+                    ],
+                    "method": "DELETE",
+                    "url": {
+                      "host": [
+                        "{{base_url}}"
+                      ],
+                      "path": [
+                        "api",
+                        "categories",
+                        "cat_123"
+                      ],
+                      "raw": "{{base_url}}/api/categories/cat_123"
+                    }
+                  },
+                  "response": []
+                }
+              ],
+              "name": "Categories"
+            }
+          ]
+        },
+        {
+          "name": "Discounts",
+          "item": [
+            {
+              "name": "Apply Discount",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"type\": \"percentage\",\n    \"value\": 15.0\n}"
+                },
+                "description": "Applies a percentage or fixed discount to the specified product ID. Requires authenticated admin token.",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "prod_123",
+                    "discount"
+                  ],
+                  "raw": "{{base_url}}/api/products/prod_123/discount"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Remove Discount",
+              "request": {
+                "description": "Removes any active discount applied to the specified product ID. Requires authenticated admin token.",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "DELETE",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "prod_123",
+                    "discount"
+                  ],
+                  "raw": "{{base_url}}/api/products/prod_123/discount"
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Images",
+          "item": [
+            {
+              "name": "Presign Upload URL",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"files\": [\n        {\n            \"filename\": \"product_shot.jpg\",\n            \"content_type\": \"image/jpeg\"\n        }\n    ]\n}"
+                },
+                "description": "Generates a presigned storage upload URL for client-side uploads. Requires admin authorization.",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "prod_123",
+                    "images",
+                    "presign"
+                  ],
+                  "raw": "{{base_url}}/api/products/prod_123/images/presign"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Register Uploaded Images",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"images\": [\n        {\n            \"key\": \"products/prod_123/img_abc123.jpg\",\n            \"is_primary\": true\n        }\n    ]\n}"
+                },
+                "description": "Registers pre-uploaded storage objects into the product's database record. Requires admin authorization.",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "prod_123",
+                    "images",
+                    "register"
+                  ],
+                  "raw": "{{base_url}}/api/products/prod_123/images/register"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Set Primary Image",
+              "request": {
+                "description": "Flags a specific image as primary for the product catalog display. Requires admin authorization.",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "PUT",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "prod_123",
+                    "images",
+                    "img_abc123",
+                    "primary"
+                  ],
+                  "raw": "{{base_url}}/api/products/prod_123/images/img_abc123/primary"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Image",
+              "request": {
+                "description": "Removes a product image resource from database and storage bucket. Requires admin authorization.",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "DELETE",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "prod_123",
+                    "images",
+                    "img_abc123"
+                  ],
+                  "raw": "{{base_url}}/api/products/prod_123/images/img_abc123"
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Reviews",
+          "item": [
+            {
+              "name": "Get Reviews",
+              "request": {
+                "description": "Retrieves all customer reviews submitted for the specified product ID. This endpoint is public.",
+                "header": [],
+                "method": "GET",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "prod_123",
+                    "reviews"
+                  ],
+                  "raw": "{{base_url}}/api/products/prod_123/reviews"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Rating Summary",
+              "request": {
+                "description": "Retrieves the average rating and total review count for the specified product ID. This endpoint is public.",
+                "header": [],
+                "method": "GET",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "prod_123",
+                    "reviews",
+                    "rating"
+                  ],
+                  "raw": "{{base_url}}/api/products/prod_123/reviews/rating"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Submit Review",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"rating\": 5,\n    \"comment\": \"Excellent product, highly recommended!\"\n}"
+                },
+                "description": "Submits a new customer review for the specified product ID. Requires an authenticated user access token.",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "prod_123",
+                    "reviews"
+                  ],
+                  "raw": "{{base_url}}/api/products/prod_123/reviews"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Review",
+              "request": {
+                "description": "Deletes the specified review by its ID. Requires authorization: only the review owner or an admin can delete it.",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "DELETE",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "prod_123",
+                    "reviews",
+                    "rev_abc"
+                  ],
+                  "raw": "{{base_url}}/api/products/prod_123/reviews/rev_abc"
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Variants",
+          "item": [
+            {
+              "name": "Get Variants",
+              "request": {
+                "description": "Retrieves all variants associated with a specific product ID. Publicly accessible.",
+                "header": [],
+                "method": "GET",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "{{product_id}}",
+                    "variants"
+                  ],
+                  "raw": "{{base_url}}/api/products/{{product_id}}/variants"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Add Variant",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"sku\": \"MS-WIRE-BLK-01\",\n    \"name\": \"Black Edition\",\n    \"price\": 49.99,\n    \"attributes\": {\n        \"color\": \"Black\",\n        \"connectivity\": \"Wireless\"\n    }\n}"
+                },
+                "description": "Adds a new variant to an existing product. Requires authenticated admin/authorized user token.",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "{{product_id}}",
+                    "variants"
+                  ],
+                  "raw": "{{base_url}}/api/products/{{product_id}}/variants"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Variant",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"sku\": \"MS-WIRE-BLK-01-UPDATED\",\n    \"name\": \"Black Edition Pro\",\n    \"price\": 54.99,\n    \"attributes\": {\n        \"color\": \"Matte Black\",\n        \"connectivity\": \"Wireless/USB-C\"\n    }\n}"
+                },
+                "description": "Updates an existing variant for a product. Requires authenticated admin/authorized user token.",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "PUT",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "{{product_id}}",
+                    "variants",
+                    "{{variant_id}}"
+                  ],
+                  "raw": "{{base_url}}/api/products/{{product_id}}/variants/{{variant_id}}"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Variant",
+              "request": {
+                "description": "Deletes a variant from a product. A product must retain at least one variant. Requires authenticated admin/authorized user token.",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "DELETE",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "{{product_id}}",
+                    "variants",
+                    "{{variant_id}}"
+                  ],
+                  "raw": "{{base_url}}/api/products/{{product_id}}/variants/{{variant_id}}"
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Bulk",
+          "item": [
+            {
+              "name": "Bulk Create Products",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\n    {\n        \"name\": \"Wireless Mouse Pro\",\n        \"description\": \"Ergonomic wireless mouse\",\n        \"category_id\": \"cat_accessories\",\n        \"variants\": [\n            {\n                \"sku\": \"MS-WIRE-PRO-01\",\n                \"name\": \"Black\",\n                \"price\": 49.99,\n                \"attributes\": {\n                    \"color\": \"Black\"\n                }\n            }\n        ]\n    },\n    {\n        \"name\": \"Mechanical Keyboard\",\n        \"description\": \"RGB mechanical keyboard\",\n        \"category_id\": \"cat_accessories\",\n        \"variants\": [\n            {\n                \"sku\": \"KB-MECH-01\",\n                \"name\": \"Blue Switch\",\n                \"price\": 89.99,\n                \"attributes\": {\n                    \"switch\": \"Blue\"\n                }\n            }\n        ]\n    }\n]"
+                },
+                "description": "Creates multiple products along with their variants in a single API request. Requires authenticated admin token.",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "bulk"
+                  ],
+                  "raw": "{{base_url}}/api/products/bulk"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Bulk Update Products",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "[\n    {\n        \"id\": \"prod_123\",\n        \"name\": \"Wireless Mouse Pro V2\",\n        \"description\": \"Updated ergonomic wireless mouse\",\n        \"category_id\": \"cat_accessories\",\n        \"variants\": [\n            {\n                \"id\": \"var_987\",\n                \"sku\": \"MS-WIRE-PRO-01\",\n                \"name\": \"Black\",\n                \"price\": 54.99,\n                \"attributes\": {\n                    \"color\": \"Black\"\n                }\n            }\n        ]\n    }\n]"
+                },
+                "description": "Updates multiple existing products and their variants in a single API request. Requires authenticated admin token.",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "PUT",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "bulk"
+                  ],
+                  "raw": "{{base_url}}/api/products/bulk"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Bulk Delete Products",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"ids\": [\n        \"prod_123\",\n        \"prod_456\"\n    ]\n}"
+                },
+                "description": "Deletes multiple products simultaneously by their IDs in a single API request. Requires authenticated admin token.",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "DELETE",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "products",
+                    "bulk"
+                  ],
+                  "raw": "{{base_url}}/api/products/bulk"
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Inventory",
+      "description": "Real-time stock management and alerting services.",
+      "item": [
+        {
+          "name": "History",
+          "item": [
+            {
+              "name": "Get Variant Stock History",
+              "request": {
+                "description": "Retrieves the audit log of all stock updates, additions, and adjustments made to the specified variant ID across locations. Requires authentication.",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "GET",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "var_123",
+                    "history"
+                  ],
+                  "raw": "{{base_url}}/api/inventory/var_123/history"
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Reports",
+          "item": [
+            {
+              "name": "Get Low Stock Items Report",
+              "request": {
+                "description": "Lists all inventory stock items where the quantity is strictly less than or equal to their low-stock threshold. Requires authentication.",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "GET",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "low-stock"
+                  ],
+                  "raw": "{{base_url}}/api/inventory/low-stock"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Export Inventory CSV",
+              "request": {
+                "description": "Generates a CSV attachment download containing all catalog items, location codes, and stock parameters. Requires authentication.",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "GET",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "export"
+                  ],
+                  "raw": "{{base_url}}/api/inventory/export"
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Reservation",
+          "item": [
+            {
+              "name": "Reserve Stock",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"location_id\": \"default\",\n    \"quantity\": 2\n}"
+                },
+                "description": "Places a stock lock reservation on a product variant. Requires authentication.",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "var_123",
+                    "reserve"
+                  ],
+                  "raw": "{{base_url}}/api/inventory/var_123/reserve"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Release Reservation",
+              "request": {
+                "description": "Releases a locked reservation back into active inventory status. Requires authentication.",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "DELETE",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "var_123",
+                    "reserve",
+                    "res_987"
+                  ],
+                  "raw": "{{base_url}}/api/inventory/var_123/reserve/res_987"
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Sync",
+          "item": [
+            {
+              "name": "Sync Stock Level",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"variant_id\": \"var_123\",\n    \"location_id\": \"default\",\n    \"quantity\": 30\n}"
+                },
+                "description": "Performs an absolute override synchronization for a variant's stock level. Requires authentication.",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "sync"
+                  ],
+                  "raw": "{{base_url}}/api/inventory/sync"
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Transfer",
+          "item": [
+            {
+              "name": "Transfer Stock",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"variant_id\": \"var_123\",\n    \"from_location\": \"warehouse-1\",\n    \"to_location\": \"warehouse-2\",\n    \"quantity\": 10\n}"
+                },
+                "description": "Moves stock quantities between inventory warehouse locations. Requires authentication.",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "transfer"
+                  ],
+                  "raw": "{{base_url}}/api/inventory/transfer"
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Adjustment",
+          "item": [
+            {
+              "name": "Adjust Stock",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"location_id\": \"default\",\n    \"adjustment\": 5,\n    \"reason\": \"Cycle count deviation\"\n}"
+                },
+                "description": "Adjusts stock up or down for a variant by quantity. Requires authentication.",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "var_123",
+                    "adjust"
+                  ],
+                  "raw": "{{base_url}}/api/inventory/var_123/adjust"
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Bulk",
+          "item": [
+            {
+              "name": "Bulk Update Stock",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"items\": [\n        {\n            \"variant_id\": \"var_1\",\n            \"location_id\": \"loc-a\",\n            \"quantity\": 50\n        },\n        {\n            \"variant_id\": \"var_2\",\n            \"location_id\": \"loc-b\",\n            \"quantity\": 25\n        }\n    ]\n}"
+                },
+                "description": "Updates multiple stock items at once. Requires authentication.",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "bulk-update"
+                  ],
+                  "raw": "{{base_url}}/api/inventory/bulk-update"
+                }
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "Core",
+          "item": [
+            {
+              "name": "List Stock",
+              "request": {
+                "description": "Retrieves stock items list filtered by variant ID, location ID, or status (e.g. low_stock). Requires admin privileges.",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "GET",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory"
+                  ],
+                  "query": [
+                    {
+                      "key": "variant_id",
+                      "value": ""
+                    },
+                    {
+                      "key": "location_id",
+                      "value": ""
+                    },
+                    {
+                      "key": "status",
+                      "value": ""
+                    }
+                  ],
+                  "raw": "{{base_url}}/api/inventory?variant_id=\u0026location_id=\u0026status="
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Inventory Alerts",
+              "request": {
+                "description": "Lists all low stock alerts triggered in the system. Requires admin privileges.",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "GET",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "alerts"
+                  ],
+                  "raw": "{{base_url}}/api/inventory/alerts"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Check Stock",
+              "request": {
+                "description": "Public check of available stock for a product variant at a specific location.",
+                "header": [],
+                "method": "GET",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "var_123"
+                  ],
+                  "query": [
+                    {
+                      "key": "location_id",
+                      "value": "default"
+                    }
+                  ],
+                  "raw": "{{base_url}}/api/inventory/var_123?location_id=default"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Update Stock",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"variant_id\": \"var_123\",\n    \"location_id\": \"default\",\n    \"quantity\": 15\n}"
+                },
+                "description": "Updates the stock count for a variant at a location. Triggers alerts if drops below threshold. Requires admin privileges.",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "update"
+                  ],
+                  "raw": "{{base_url}}/api/inventory/update"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Configure Stock Settings",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"variant_id\": \"var_123\",\n    \"location_id\": \"default\",\n    \"quantity\": 10,\n    \"low_stock_threshold\": 5,\n    \"allow_backorders\": true,\n    \"backorder_limit\": 100\n}"
+                },
+                "description": "Configures stock settings for a variant at a location, including low stock thresholds and backorder options. Requires admin privileges.",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "configure"
+                  ],
+                  "raw": "{{base_url}}/api/inventory/configure"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Delete Stock Record",
+              "request": {
+                "description": "Removes the stock item mapping for a variant and location. Requires admin privileges.",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "DELETE",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "inventory",
+                    "var_123"
+                  ],
+                  "query": [
+                    {
+                      "key": "location_id",
+                      "value": "default"
+                    }
+                  ],
+                  "raw": "{{base_url}}/api/inventory/var_123?location_id=default"
+                }
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "description": "Checkout and order processing services.",
+      "item": [
+        {
+          "description": "Endpoints for authenticated customer order flows.",
+          "item": [
+            {
+              "name": "Create Order",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"items\": [\n        {\n            \"variant_id\": \"var_123\",\n            \"quantity\": 2,\n            \"price\": 29.99\n        }\n    ]\n}"
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "description": "Customer bearer token",
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders"
+                  ],
+                  "raw": "{{base_url}}/api/orders"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "List My Orders",
+              "request": {
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "GET",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "raw": "{{base_url}}/api/orders?limit=20\u0026offset=0"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get My Order",
+              "request": {
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "GET",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders",
+                    ":id"
+                  ],
+                  "raw": "{{base_url}}/api/orders/:id",
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "ord_123"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Cancel My Order",
+              "request": {
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{access_token}}"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders",
+                    ":id",
+                    "cancel"
+                  ],
+                  "raw": "{{base_url}}/api/orders/:id/cancel",
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "ord_123"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ],
+          "name": "User Orders"
+        },
+        {
+          "description": "Endpoints for unauthenticated guest checkout.",
+          "item": [
+            {
+              "name": "Create Guest Order",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"customer_snapshot\": {\n        \"name\": \"John Doe\",\n        \"email\": \"john@example.com\",\n        \"contact_number\": \"+1234567890\"\n    },\n    \"items\": [\n        {\n            \"variant_id\": \"var_456\",\n            \"quantity\": 1,\n            \"price\": 49.99\n        }\n    ]\n}"
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "orders",
+                    "guest"
+                  ],
+                  "raw": "{{base_url}}/api/orders/guest"
+                }
+              },
+              "response": []
+            }
+          ],
+          "name": "Guest Orders"
+        },
+        {
+          "description": "Administrative order management endpoints.",
+          "item": [
+            {
+              "name": "List All Orders",
+              "request": {
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "method": "GET",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "orders"
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "20"
+                    },
+                    {
+                      "key": "offset",
+                      "value": "0"
+                    }
+                  ],
+                  "raw": "{{base_url}}/api/admin/orders?limit=20\u0026offset=0"
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Get Order",
+              "request": {
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "method": "GET",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "orders",
+                    ":id"
+                  ],
+                  "raw": "{{base_url}}/api/admin/orders/:id",
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "ord_123"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            },
+            {
+              "name": "Transition Order State",
+              "request": {
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"action\": \"ship\"\n}"
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{admin_token}}"
+                  }
+                ],
+                "method": "POST",
+                "url": {
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "api",
+                    "admin",
+                    "orders",
+                    ":id",
+                    "transition"
+                  ],
+                  "raw": "{{base_url}}/api/admin/orders/:id/transition",
+                  "variable": [
+                    {
+                      "key": "id",
+                      "value": "ord_123"
+                    }
+                  ]
+                }
+              },
+              "response": []
+            }
+          ],
+          "name": "Admin Orders"
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "description": "Payment processing and callback services.",
+      "item": [
+        {
+          "name": "Create Payment Intent",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"order_id\": \"ord_1234567890\",\n    \"provider\": \"stripe\",\n    \"currency\": \"USD\"\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "description": "Authenticated customer token required",
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "POST",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "intent"
+              ],
+              "raw": "{{base_url}}/api/payments/intent"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Process Provider Callback",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"event\": \"payment_intent.succeeded\",\n    \"data\": {\n        \"object\": {\n            \"id\": \"pi_123\",\n            \"amount\": 5998\n        }\n    }\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "callback",
+                ":provider"
+              ],
+              "raw": "{{base_url}}/api/payments/callback/:provider",
+              "variable": [
+                {
+                  "description": "Name of the gateway provider (e.g. stripe, paypal)",
+                  "key": "provider",
+                  "value": "stripe"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

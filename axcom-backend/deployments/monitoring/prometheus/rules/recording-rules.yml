@@ -1,0 +1,103 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+#
+# Pre-computed recording rules for ecom-engine.
+# These eliminate repeated rate() calculations on every dashboard panel load.
+# Naming convention: level:metric_name:operation
+
+groups:
+  - name: ecom_engine_http
+    interval: 15s
+    rules:
+      # Total request rate across all dimensions
+      - record: job:ecom_engine_http_requests_total:rate1m
+        expr: sum(rate(ecom_engine_http_requests_total[1m]))
+
+      # Request rate per route (used by http-traffic dashboard)
+      - record: route:ecom_engine_http_requests_total:rate1m
+        expr: sum by (route, method, status) (rate(ecom_engine_http_requests_total[1m]))
+
+      # 5xx error rate as a percentage
+      - record: job:ecom_engine_http_5xx_rate_pct:rate1m
+        expr: >
+          100 * sum(rate(ecom_engine_http_requests_total{status=~"5.."}[1m]))
+          / clamp_min(sum(rate(ecom_engine_http_requests_total[1m])), 1)
+
+      # 4xx error rate as a percentage
+      - record: job:ecom_engine_http_4xx_rate_pct:rate1m
+        expr: >
+          100 * sum(rate(ecom_engine_http_requests_total{status=~"4.."}[1m]))
+          / clamp_min(sum(rate(ecom_engine_http_requests_total[1m])), 1)
+
+  - name: ecom_engine_db
+    interval: 15s
+    rules:
+      # DB pool utilization percentage — used by the gauge panel
+      - record: job:ecom_engine_db_pool_utilization_pct
+        expr: >
+          100 * ecom_engine_db_pool_acquired_conns
+          / clamp_min(ecom_engine_db_pool_max_conns, 1)
+
+      # Empty acquire rate — rising value means pool is undersized
+      - record: job:ecom_engine_db_pool_empty_acquires:rate1m
+        expr: rate(ecom_engine_db_pool_empty_acquire_count_total[1m])
+
+      # Acquire duration in milliseconds
+      - record: job:ecom_engine_db_pool_acquire_duration_ms:rate1m
+        expr: rate(ecom_engine_db_pool_acquire_duration_seconds_total[1m]) * 1000
+
+  - name: ecom_engine_cache
+    interval: 15s
+    rules:
+      # L1 (memory) cache hit rate
+      - record: layer:ecom_engine_cache_hit_rate:rate1m
+        expr: >
+          sum by (layer) (rate(ecom_engine_cache_requests_total{result="hit"}[1m]))
+          / clamp_min(
+            sum by (layer) (rate(ecom_engine_cache_requests_total[1m])),
+            0.001
+          )
+
+      # L1 memory fill ratio
+      - record: job:ecom_engine_cache_memory_fill_ratio
+        expr: >
+          ecom_engine_cache_memory_items
+          / clamp_min(ecom_engine_cache_memory_max_items, 1)
+
+      # Redis pool hit ratio
+      - record: job:ecom_engine_cache_redis_pool_hit_rate
+        expr: >
+          rate(ecom_engine_cache_redis_pool_hits_total[1m])
+          / clamp_min(
+            rate(ecom_engine_cache_redis_pool_hits_total[1m])
+            + rate(ecom_engine_cache_redis_pool_misses_total[1m]),
+            0.001
+          )
+
+  - name: ecom_engine_ratelimit
+    interval: 15s
+    rules:
+      # Rate limit denial rate
+      - record: job:ecom_engine_ratelimit_denied:rate1m
+        expr: sum(rate(ecom_engine_ratelimit_requests_total{decision="denied"}[1m]))
+
+      # Rate limit allow rate
+      - record: job:ecom_engine_ratelimit_allowed:rate1m
+        expr: sum(rate(ecom_engine_ratelimit_requests_total{decision="allowed"}[1m]))
+
+  - name: ecom_engine_runtime
+    interval: 15s
+    rules:
+      # GC pause seconds consumed per second — used by alerting rule threshold
+      - record: job:ecom_engine_runtime_gc_pause_rate:rate1m
+        expr: rate(ecom_engine_runtime_gc_pause_seconds_total[1m])
+
+      # GC cycles per minute — dashboard convenience
+      - record: job:ecom_engine_runtime_gc_cycles:rate1m
+        expr: rate(ecom_engine_runtime_gc_cycles_total[1m]) * 60
+
+      # Heap utilization ratio: alloc / sys — how much of OS-granted heap is in use
+      - record: job:ecom_engine_runtime_heap_utilization_ratio
+        expr: >
+          ecom_engine_runtime_heap_alloc_bytes
+          / clamp_min(ecom_engine_runtime_heap_sys_bytes, 1)

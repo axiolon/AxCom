@@ -1,0 +1,256 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto:wght@400;500&display=swap");
+
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * AxCom documentation theme.
+ * Mirrors the design tokens from ecom-engine-homepage.
+ */
+
+/* ─── Light mode ────────────────────────────────────────────────────────────── */
+:root {
+  /* Brand Colors */
+  --ax-color-primary: #1e4f8b;
+  --ax-color-secondary: #f28c28;
+  --ax-color-accent: #3fa796;
+
+  /* Infima color overrides mapped to Brand Colors */
+  --ifm-color-primary: var(--ax-color-primary);
+  --ifm-color-primary-dark: #1a477d;
+  --ifm-color-primary-darker: #194375;
+  --ifm-color-primary-darkest: #153761;
+  --ifm-color-primary-light: #225799;
+  --ifm-color-primary-lighter: #245ca2;
+  --ifm-color-primary-lightest: #3170be;
+
+  /* Typography */
+  --ifm-font-family-base: "Roboto", system-ui, -apple-system, sans-serif;
+  --ifm-font-family-monospace:
+    "Geist Mono", "JetBrains Mono", ui-monospace, monospace;
+  --ifm-font-size-base: 15px;
+  --ifm-line-height-base: 1.7;
+  --ifm-heading-font-weight: 700;
+  --ifm-heading-letter-spacing: -0.02em;
+
+  /* Code blocks */
+  --ifm-code-font-size: 12.5px;
+  --ifm-code-border-radius: 4px;
+  --ifm-code-padding-horizontal: 6px;
+  --ifm-code-padding-vertical: 2px;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.06);
+
+  /* Sidebar */
+  --ifm-sidebar-width: 260px;
+
+  /* Navbar */
+  --ifm-navbar-height: 64px;
+  --ifm-navbar-background-color: rgba(255, 255, 255, 0.92);
+  --ifm-navbar-shadow: 0 1px 0 0 #e4e4e7;
+
+  /* Borders & backgrounds */
+  --ifm-background-color: #ffffff;
+  --ifm-background-surface-color: #fafafa;
+  --ifm-border-color: #e4e4e7;
+  --ifm-toc-border-color: #e4e4e7;
+}
+
+/* ─── Dark mode ─────────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --ax-color-primary: #1e4f8b;
+  --ax-color-secondary: #f28c28;
+  --ax-color-accent: #3fa796;
+
+  --ifm-color-primary: #4f80bd;
+  --ifm-color-primary-dark: #3a6fae;
+  --ifm-color-primary-darker: #3567a2;
+  --ifm-color-primary-darkest: #275287;
+  --ifm-color-primary-light: #6491ca;
+  --ifm-color-primary-lighter: #709ad1;
+  --ifm-color-primary-lightest: #92b4df;
+
+  --ifm-background-color: #0a0a0a;
+  --ifm-background-surface-color: #111111;
+  --ifm-navbar-background-color: rgba(10, 10, 10, 0.92);
+  --ifm-border-color: #27272a;
+  --docusaurus-highlighted-code-line-bg: rgba(255, 255, 255, 0.08);
+}
+
+/* ─── Navbar ─────────────────────────────────────────────────────────────────── */
+.navbar {
+  background: transparent !important;
+}
+
+.navbar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--ifm-navbar-background-color);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.navbar__title {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-size: 15px;
+}
+
+/* ─── Sidebar ────────────────────────────────────────────────────────────────── */
+.menu__link {
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 6px;
+}
+
+.menu__link--active {
+  font-weight: 600;
+}
+
+.menu__caret::before {
+  background-size: 1.2rem 1.2rem;
+}
+
+/* ─── Article content ────────────────────────────────────────────────────────── */
+.markdown h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  border-bottom: 1px solid var(--ifm-border-color);
+  padding-bottom: 12px;
+  margin-bottom: 24px;
+}
+
+.markdown h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  border-bottom: 1px solid var(--ifm-border-color);
+  padding-bottom: 6px;
+  margin-top: 40px;
+}
+
+.markdown h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 28px;
+}
+
+.markdown p {
+  line-height: 1.75;
+}
+
+.markdown hr {
+  border: none;
+  border-top: 1px solid var(--ifm-border-color);
+  margin: 8px 0;
+}
+
+/* ─── Code blocks ────────────────────────────────────────────────────────────── */
+.prism-code {
+  font-size: 12.5px;
+  line-height: 1.65;
+  border-radius: 10px;
+}
+
+/* ─── Tables ─────────────────────────────────────────────────────────────────── */
+.markdown table {
+  font-size: 13px;
+  border-collapse: collapse;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--ifm-border-color);
+}
+
+.markdown table th {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background-color: var(--ifm-background-surface-color);
+  padding: 10px 14px;
+}
+
+.markdown table td {
+  padding: 10px 14px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--ifm-border-color);
+}
+
+.markdown table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.markdown table tbody tr:nth-child(even) {
+  background-color: var(--ifm-background-surface-color);
+}
+
+/* ─── Admonitions (:::info, :::note, :::warning) ────────────────────────────── */
+.admonition {
+  border-radius: 10px;
+  border-left-width: 3px;
+  font-size: 14px;
+}
+
+.admonition-heading h5 {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+/* ─── Footer ─────────────────────────────────────────────────────────────────── */
+.footer {
+  border-top: 1px solid var(--ifm-border-color);
+}
+
+.footer__title {
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* ─── Typography Overrides ─────────────────────────────────────────────────── */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4,
+.markdown h5,
+.markdown h6 {
+  font-family:
+    "Montserrat",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-weight: 700;
+}
+
+.navbar,
+.navbar__item,
+.navbar__link,
+.navbar__title,
+.menu__link,
+.button,
+.tabs,
+.breadcrumbs,
+.pagination-nav,
+.footer__link-item {
+  font-family:
+    "Roboto",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-weight: 500;
+}

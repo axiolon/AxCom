@@ -1,0 +1,77 @@
+{
+  "info": {
+    "_postman_id": "d2b998b9-5f2c-4a37-b957-61c02abdfcf3",
+    "name": "Ecom Engine - Catalog (Discounts)",
+    "description": "Postman collection for testing the product discount management endpoints of the ecom-engine API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Apply Discount",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"type\": \"percentage\",\n    \"value\": 15.0\n}"
+        },
+        "description": "Applies a percentage or fixed discount to the specified product ID. Requires authenticated admin token.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "prod_123",
+            "discount"
+          ],
+          "raw": "{{base_url}}/api/products/prod_123/discount"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Remove Discount",
+      "request": {
+        "description": "Removes any active discount applied to the specified product ID. Requires authenticated admin token.",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "DELETE",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "prod_123",
+            "discount"
+          ],
+          "raw": "{{base_url}}/api/products/prod_123/discount"
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

@@ -1,0 +1,345 @@
+{
+  "info": {
+    "_postman_id": "c1a898b9-5f2c-4a37-b957-61c02abdfcf2",
+    "name": "Ecom Engine - Catalog (Core)",
+    "description": "Postman collection for testing the core catalog and category management endpoints of the ecom-engine API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "description": "Retrieves products list with optional category, inStock, price range, and search filters.",
+            "header": [],
+            "method": "GET",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "category_id",
+                  "value": ""
+                },
+                {
+                  "key": "inStock",
+                  "value": "true"
+                },
+                {
+                  "key": "q",
+                  "value": ""
+                }
+              ],
+              "raw": "{{base_url}}/api/products?category_id=\u0026inStock=true\u0026q="
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Search Products Alias",
+          "request": {
+            "description": "Alias endpoint for searching products by query parameters.",
+            "header": [],
+            "method": "GET",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "phone"
+                }
+              ],
+              "raw": "{{base_url}}/api/products/search?q=phone"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Product By ID",
+          "request": {
+            "description": "Retrieves a single product details by its unique identifier.",
+            "header": [],
+            "method": "GET",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "prod_123"
+              ],
+              "raw": "{{base_url}}/api/products/prod_123"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Smartphone X\",\n    \"description\": \"Flagship phone\",\n    \"category_id\": \"cat_123\",\n    \"variants\": [\n        {\n            \"sku\": \"SM-X-01\",\n            \"name\": \"Black 128GB\",\n            \"price\": 999.99\n        }\n    ]\n}"
+            },
+            "description": "Creates a new catalog product with its associated variants. Requires authenticated token.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "POST",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products"
+              ],
+              "raw": "{{base_url}}/api/products"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Product",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Smartphone X Pro\",\n    \"description\": \"Updated details\",\n    \"category_id\": \"cat_123\",\n    \"variants\": [\n        {\n            \"sku\": \"SM-X-01\",\n            \"name\": \"Black 128GB\",\n            \"price\": 1049.99\n        }\n    ]\n}"
+            },
+            "description": "Updates an existing product's fields and variant pricing. Requires authenticated token.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "PUT",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "prod_123"
+              ],
+              "raw": "{{base_url}}/api/products/prod_123"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "description": "Deletes a product from the catalog by ID. Requires authenticated token.",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "DELETE",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "products",
+                "prod_123"
+              ],
+              "raw": "{{base_url}}/api/products/prod_123"
+            }
+          },
+          "response": []
+        }
+      ],
+      "name": "Products"
+    },
+    {
+      "item": [
+        {
+          "name": "List Categories",
+          "request": {
+            "description": "Lists all configured categories in the system.",
+            "header": [],
+            "method": "GET",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories"
+              ],
+              "raw": "{{base_url}}/api/categories"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Category By ID",
+          "request": {
+            "description": "Retrieves details of a single category by ID.",
+            "header": [],
+            "method": "GET",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "cat_123"
+              ],
+              "raw": "{{base_url}}/api/categories/cat_123"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Category",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Mobile Phones\",\n    \"slug\": \"mobile-phones\",\n    \"parent_id\": null\n}"
+            },
+            "description": "Creates a new category. Allows nesting via parent_id. Requires authenticated token.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "POST",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories"
+              ],
+              "raw": "{{base_url}}/api/categories"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Category",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Smartphones\",\n    \"slug\": \"smartphones\",\n    \"parent_id\": null\n}"
+            },
+            "description": "Updates details of a category. Requires authenticated token.",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "PUT",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "cat_123"
+              ],
+              "raw": "{{base_url}}/api/categories/cat_123"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Category",
+          "request": {
+            "description": "Deletes a category if it has no active products or child subcategories. Requires authenticated token.",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "DELETE",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "categories",
+                "cat_123"
+              ],
+              "raw": "{{base_url}}/api/categories/cat_123"
+            }
+          },
+          "response": []
+        }
+      ],
+      "name": "Categories"
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": [
+          ""
+        ],
+        "type": "text/javascript"
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "exec": [
+          ""
+        ],
+        "type": "text/javascript"
+      }
+    }
+  ]
+}

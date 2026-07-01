@@ -1,0 +1,203 @@
+{
+  "info": {
+    "_postman_id": "d2b898b9-5f2c-4a37-b957-61c02abdfcf3",
+    "name": "Ecom Engine - Inventory (Core)",
+    "description": "Postman collection for testing the core inventory management, stock levels, alerting, and configuration endpoints of the ecom-engine API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "List Stock",
+      "request": {
+        "description": "Retrieves stock items list filtered by variant ID, location ID, or status (e.g. low_stock). Requires admin privileges.",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "GET",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory"
+          ],
+          "query": [
+            {
+              "key": "variant_id",
+              "value": ""
+            },
+            {
+              "key": "location_id",
+              "value": ""
+            },
+            {
+              "key": "status",
+              "value": ""
+            }
+          ],
+          "raw": "{{base_url}}/api/inventory?variant_id=\u0026location_id=\u0026status="
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Inventory Alerts",
+      "request": {
+        "description": "Lists all low stock alerts triggered in the system. Requires admin privileges.",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "GET",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory",
+            "alerts"
+          ],
+          "raw": "{{base_url}}/api/inventory/alerts"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Check Stock",
+      "request": {
+        "description": "Public check of available stock for a product variant at a specific location.",
+        "header": [],
+        "method": "GET",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory",
+            "var_123"
+          ],
+          "query": [
+            {
+              "key": "location_id",
+              "value": "default"
+            }
+          ],
+          "raw": "{{base_url}}/api/inventory/var_123?location_id=default"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update Stock",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"variant_id\": \"var_123\",\n    \"location_id\": \"default\",\n    \"quantity\": 15\n}"
+        },
+        "description": "Updates the stock count for a variant at a location. Triggers alerts if drops below threshold. Requires admin privileges.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory",
+            "update"
+          ],
+          "raw": "{{base_url}}/api/inventory/update"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Configure Stock Settings",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"variant_id\": \"var_123\",\n    \"location_id\": \"default\",\n    \"quantity\": 10,\n    \"low_stock_threshold\": 5,\n    \"allow_backorders\": true,\n    \"backorder_limit\": 100\n}"
+        },
+        "description": "Configures stock settings for a variant at a location, including low stock thresholds and backorder options. Requires admin privileges.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory",
+            "configure"
+          ],
+          "raw": "{{base_url}}/api/inventory/configure"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Stock Record",
+      "request": {
+        "description": "Removes the stock item mapping for a variant and location. Requires admin privileges.",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "DELETE",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory",
+            "var_123"
+          ],
+          "query": [
+            {
+              "key": "location_id",
+              "value": "default"
+            }
+          ],
+          "raw": "{{base_url}}/api/inventory/var_123?location_id=default"
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+#
+# Grafana unified alerting — cache and Redis pool alerts.
+
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Cache Alerts
+    folder: ecom-engine
+    interval: 1m
+    rules:
+      - uid: ecom-alert-redis-hit-rate-low
+        title: Low Redis Cache Hit Rate
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                sum(rate(ecom_engine_cache_requests_total{layer="redis",result="hit"}[1m]))
+                / clamp_min(sum(rate(ecom_engine_cache_requests_total{layer="redis"}[1m])), 0.001)
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0.5]
+                    type: lt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 10m
+        labels:
+          severity: warning
+          service: ecom-engine
+        annotations:
+          summary: "Redis (L2) cache hit rate below 50%"
+          description: "Redis hit rate is {{ $values.A.Value | printf \"%.0f%%\" }} for 10+ minutes. May indicate cache invalidation storm, TTL too low, or cold start after deploy."
+        isPaused: false
+
+      - uid: ecom-alert-redis-pool-timeouts
+        title: Redis Pool Timeouts
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "rate(ecom_engine_cache_redis_pool_timeouts_total[1m])"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0.1]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        labels:
+          severity: warning
+          service: ecom-engine
+        annotations:
+          summary: "Redis connection pool timing out"
+          description: "Redis pool timeouts at {{ $values.A.Value | printf \"%.2f\" }}/s. Redis may be overloaded or unreachable."
+        isPaused: false
+
+      - uid: ecom-alert-ratelimit-fallback
+        title: Rate Limiter Fell Back to Memory
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "increase(ecom_engine_ratelimit_backend_fallbacks_total[5m])"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 0m
+        labels:
+          severity: warning
+          service: ecom-engine
+        annotations:
+          summary: "Rate limiter fell back to in-memory backend"
+          description: "Distributed rate limiting is no longer enforced — per-instance memory limiting is active. Investigate Redis connectivity."
+        isPaused: false

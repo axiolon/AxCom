@@ -1,0 +1,121 @@
+{
+  "info": {
+    "_postman_id": "a8e1b6f0-5d2f-41ba-8e7c-a4962cbdfcf5",
+    "name": "Ecom Engine - Catalog (Reviews)",
+    "description": "Postman collection for testing the product reviews management endpoints of the ecom-engine API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Reviews",
+      "request": {
+        "description": "Retrieves all customer reviews submitted for the specified product ID. This endpoint is public.",
+        "header": [],
+        "method": "GET",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "prod_123",
+            "reviews"
+          ],
+          "raw": "{{base_url}}/api/products/prod_123/reviews"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Get Rating Summary",
+      "request": {
+        "description": "Retrieves the average rating and total review count for the specified product ID. This endpoint is public.",
+        "header": [],
+        "method": "GET",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "prod_123",
+            "reviews",
+            "rating"
+          ],
+          "raw": "{{base_url}}/api/products/prod_123/reviews/rating"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Submit Review",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"rating\": 5,\n    \"comment\": \"Excellent product, highly recommended!\"\n}"
+        },
+        "description": "Submits a new customer review for the specified product ID. Requires an authenticated user access token.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "prod_123",
+            "reviews"
+          ],
+          "raw": "{{base_url}}/api/products/prod_123/reviews"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Review",
+      "request": {
+        "description": "Deletes the specified review by its ID. Requires authorization: only the review owner or an admin can delete it.",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "DELETE",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "prod_123",
+            "reviews",
+            "rev_abc"
+          ],
+          "raw": "{{base_url}}/api/products/prod_123/reviews/rev_abc"
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

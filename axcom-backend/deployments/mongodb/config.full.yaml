@@ -1,0 +1,84 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+
+# Full config: MongoDB + RabbitMQ events + Redis cache
+# Requires rabbitmq-redis stack running on ecom-net
+# Use with: volumes: - ./config.full.yaml:/app/config.yaml
+
+port: "8080"
+secret: "dev-secret-change-in-production"
+service_name: "ecom-engine"
+max_request_size: 5242880
+
+auth:
+  mode: local
+
+db:
+  type: mongodb
+  connection_string: "mongodb://db:27017?replicaSet=rs0&directConnection=true"
+  database: ecom_db
+
+cache:
+  type: redis
+  addr: "redis:6379"
+  password: ""
+  db: 0
+  pool_size: 10
+  l1_ttl: 5m
+  l1_max_items: 10000
+
+storage:
+  provider: local
+  bucket: products
+  region: us-east-1
+
+events:
+  provider: rabbitmq
+  retry:
+    max_retries: 3
+    initial_backoff: 50ms
+    max_backoff: 2s
+  rabbitmq:
+    url: "amqp://guest:guest@rabbitmq:5672/"
+    exchange_name: ecom_events
+    exchange_type: topic
+    queue_name: ecom_queue
+    dlq_exchange: ecom_events_dlq
+    dlq_queue: ecom_queue_dlq
+
+modules:
+  catalog:
+    enabled: true
+    features:
+      images: true
+      variants: true
+      discounts: true
+      bulk: true
+      reviews: true
+  inventory:
+    enabled: true
+    features:
+      bulk: true
+      history: true
+      reservation: true
+      reports: true
+      transfer: true
+      adjustment: true
+      sync: true
+  cart:
+    enabled: true
+  orders:
+    enabled: true
+  payments:
+    enabled: true
+    provider: stripe
+    api_key: "sk_test_your_key_here"
+  shipping:
+    enabled: true
+    providers:
+      - type: flatrate
+        rate: 5.0
+      - type: freeabove
+        threshold: 50.0
+  notifications:
+    enabled: true

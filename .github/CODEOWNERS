@@ -1,0 +1,21 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+
+# Each line is a file pattern followed by one or more owners.
+# These owners will be automatically requested for review when a PR touches these paths.
+
+# Default owners for all files
+*                                      @axiolon-labs/maintainers
+
+# Go backend code
+/ecom-backend/                         @axiolon-labs/backend-team
+/cmd/                                  @axiolon-labs/backend-team
+/internal/                             @axiolon-labs/backend-team
+/pkg/                                  @axiolon-labs/backend-team
+
+# Documentation and website
+/docs/                                 @axiolon-labs/docs-team
+/ecom-engine-docs/                     @axiolon-labs/docs-team
+
+# GitHub Actions workflows and configuration
+/.github/workflows/                    @axiolon-labs/devops-team

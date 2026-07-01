@@ -1,0 +1,127 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+
+# ============================================================================
+# Load-Test Stack — Resource-Constrained (PostgreSQL)
+# ============================================================================
+#
+# Simulates a production-like environment with hard resource limits:
+#   - App:  2 CPUs, 1 GB RAM
+#   - DB:   1 CPU,  512 MB RAM (shared_buffers=128MB, effective_cache_size=256MB)
+#
+# PostgreSQL is tuned with max_connections=100 to keep memory predictable.
+# The app pool (max_pool_size: 50) is set to half that to surface contention.
+#
+# k6 runs on the HOST machine (not inside Docker) so it doesn't steal
+# resources from the system under test.
+#
+# Usage:
+#   docker network create ecom-net 2>$null    # idempotent
+#   docker compose -f docker-compose.postgres.yml up -d --build
+#   docker compose -f docker-compose.postgres.yml ps   # wait for healthy
+#   k6 run ../../load-tests/scenarios/max-concurrency.js
+#   docker stats --no-stream                            # check resource usage
+#   docker compose -f docker-compose.postgres.yml down -v  # cleanup
+# ============================================================================
+
+services:
+  app:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      - DB_TYPE=postgres
+      - DB_CONNECTION_STRING=postgres://postgres:loadtest@db:5432/ecom_loadtest?sslmode=disable
+      - APP_CONFIG=/app/config.yaml
+      - LOG_FORMAT=json
+      - LOG_LEVEL=info
+      - OTEL_ENABLED=false
+      - SKIP_RATE_LIMIT=true
+      # Go runtime tuning for constrained memory
+      - GOMEMLIMIT=900MiB
+      - GOMAXPROCS=2
+    volumes:
+      - ./config.postgres.yaml:/app/config.yaml:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1g
+        reservations:
+          cpus: '1.0'
+          memory: 512m
+    networks:
+      - ecom-net
+      - default
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
+  migrate:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    environment:
+      - DB_TYPE=postgres
+      - DB_CONNECTION_STRING=postgres://postgres:loadtest@db:5432/ecom_loadtest?sslmode=disable
+    entrypoint: ["./migrate", "up"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - ecom-net
+      - default
+
+  db:
+    image: postgres:16-alpine
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=loadtest
+      - POSTGRES_DB=ecom_loadtest
+    # Tuned for a 512 MB container — surfaces connection-pool exhaustion quickly
+    command: >
+      postgres
+        -c max_connections=100
+        -c shared_buffers=128MB
+        -c work_mem=4MB
+        -c maintenance_work_mem=32MB
+        -c effective_cache_size=256MB
+        -c log_min_duration_statement=500
+    volumes:
+      - loadtest-postgres-data:/var/lib/postgresql/data
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512m
+        reservations:
+          cpus: '0.5'
+          memory: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ecom_loadtest"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - ecom-net
+      - default
+
+volumes:
+  loadtest-postgres-data:
+
+networks:
+  ecom-net:
+    name: ecom-net

@@ -1,0 +1,102 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+
+# Load-test config: resource-constrained environment (PostgreSQL)
+# App container: 2 CPUs, 1 GB RAM
+# DB container:  1 CPU,  512 MB RAM (shared_buffers=128MB, effective_cache=256MB)
+#
+# Pool sizes and timeouts are deliberately tightened so that
+# saturation surfaces quickly under load.
+
+port: "8080"
+secret: "loadtest-secret-not-for-production"
+service_name: "ecom-engine"
+max_request_size: 5242880
+
+auth:
+  mode: local
+
+db:
+  type: postgres
+  connection_string: "postgres://postgres:loadtest@db:5432/ecom_loadtest?sslmode=disable"
+  database: ecom_loadtest
+
+  # --- Constrained pool for limit testing ---
+  max_pool_size: 50            # Matches pg max_connections minus overhead → forces pool contention sooner
+  min_pool_size: 5
+  max_conn_idle_time: 5m       # Recycle idle connections faster
+  max_conn_lifetime: 30m
+  max_conn_lifetime_jitter: 1m
+  connect_timeout: 5s
+  pool_acquire_timeout: 3s     # Short → surfaces pool starvation quickly
+  health_check_interval: 15s
+
+  # --- Shorter query timeouts → exposes slow queries ---
+  query_timeout: 10s
+  transaction_timeout: 30s
+
+  retry_max_attempts: 10
+  retry_initial_delay: 1s
+  retry_max_delay: 10s
+
+  # --- PostgreSQL-specific settings ---
+  ssl_mode: "disable"
+  application_name: "ecom-engine-loadtest"
+  statement_timeout: 10s       # Kill runaway queries at the server level
+  lock_timeout: 5s             # Surface lock contention quickly
+
+cache:
+  type: memory
+  l1_ttl: 5m
+  l1_max_items: 10000
+
+storage:
+  provider: local
+  bucket: products
+  region: us-east-1
+
+events:
+  provider: local
+  retry:
+    max_retries: 3
+    initial_backoff: 50ms
+    max_backoff: 2s
+  local:
+    dlq_buffer_size: 100
+
+modules:
+  catalog:
+    enabled: true
+    features:
+      images: true
+      variants: true
+      discounts: true
+      bulk: true
+      reviews: true
+  inventory:
+    enabled: true
+    features:
+      bulk: true
+      history: true
+      reservation: true
+      reports: true
+      transfer: true
+      adjustment: true
+      sync: true
+  cart:
+    enabled: true
+  orders:
+    enabled: true
+  payments:
+    enabled: true
+    provider: stripe
+    api_key: "sk_test_loadtest_key"
+  shipping:
+    enabled: true
+    providers:
+      - type: flatrate
+        rate: 5.0
+      - type: freeabove
+        threshold: 50.0
+  notifications:
+    enabled: true

@@ -1,0 +1,21 @@
+{
+  "collections": [
+    {
+      "name": "payments",
+      "indexes": [
+        {
+          "keys": { "order_id": 1 },
+          "options": { "unique": true, "name": "uq_payments_order_id" }
+        },
+        {
+          "keys": { "provider": 1, "provider_intent_id": 1 },
+          "options": { "unique": true, "name": "uq_payments_provider_intent" }
+        },
+        {
+          "keys": { "customer_id": 1, "created_at": -1 },
+          "options": { "name": "idx_payments_customer_created_at" }
+        }
+      ]
+    }
+  ]
+}

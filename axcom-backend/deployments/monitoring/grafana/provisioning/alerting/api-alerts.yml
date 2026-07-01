@@ -1,0 +1,152 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+#
+# Grafana unified alerting — HTTP / API alerts.
+# Metric-based alerts use Prometheus. Log-derived alerts use Loki (LogQL).
+
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: API Alerts
+    folder: ecom-engine
+    interval: 1m
+    rules:
+      - uid: ecom-alert-5xx-rate
+        title: High 5xx Error Rate
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "100 * sum(rate(ecom_engine_http_requests_total{status=~\"5..\"}[1m])) / clamp_min(sum(rate(ecom_engine_http_requests_total[1m])), 1)"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [5]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        labels:
+          severity: critical
+          service: ecom-engine
+        annotations:
+          summary: "5xx error rate above 5%"
+          description: "HTTP 5xx rate is {{ $values.A.Value | printf \"%.1f\" }}% for 5+ minutes."
+        isPaused: false
+
+      - uid: ecom-alert-p99-latency
+        title: High P99 Latency
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "histogram_quantile(0.99, sum by (le) (rate(ecom_engine_http_request_duration_seconds_bucket[5m])))"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [2]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        labels:
+          severity: warning
+          service: ecom-engine
+        annotations:
+          summary: "P99 latency above 2s"
+          description: "p99 request latency is {{ $values.A.Value | printf \"%.2f\" }}s sustained for 5 minutes."
+        isPaused: false
+
+      - uid: ecom-alert-error-log-spike
+        title: Error Log Spike
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              datasource:
+                type: loki
+                uid: loki
+              expr: 'sum(count_over_time({service_name="ecom-engine"} | json | level="error" [5m]))'
+              queryType: range
+              refId: A
+              legendFormat: error_count
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [50]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: sum
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 0m
+        labels:
+          severity: warning
+          service: ecom-engine
+        annotations:
+          summary: "Error log spike detected"
+          description: "More than 50 error log events in the last 5 minutes."
+        isPaused: false

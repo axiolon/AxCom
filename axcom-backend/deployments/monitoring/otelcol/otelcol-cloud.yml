@@ -1,0 +1,134 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+#
+# OTel Collector — Grafana Cloud configuration
+#
+# All three signals (metrics, logs, traces) are exported to Grafana Cloud
+# via a single authenticated OTLP endpoint. No local backends required.
+#
+# Required env vars (injected by docker-compose.cloud.yml):
+#   GRAFANA_CLOUD_OTLP_ENDPOINT   — e.g. https://otlp-gateway-prod-us-east-0.grafana.net/otlp
+#   GRAFANA_CLOUD_INSTANCE_ID     — numeric stack/instance ID
+#   GRAFANA_CLOUD_API_KEY         — API key with Metrics + Logs + Traces publisher scope
+#
+# To find your OTLP endpoint and instance ID:
+#   Grafana Cloud → Your Stack → OpenTelemetry tile → "Configure"
+
+receivers:
+  # ── OTLP — receives traces, metrics, logs from the app SDK ─────────────────
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+  # ── filelog — tails Docker JSON log files ──────────────────────────────────
+  filelog:
+    include:
+      - /var/lib/docker/containers/**/*-json.log
+    start_at: end
+    include_file_path: true
+    include_file_name: false
+    operators:
+      - type: json_parser
+        id: parse-docker-envelope
+        timestamp:
+          parse_from: attributes.time
+          layout: '%Y-%m-%dT%H:%M:%S.%9LZ'
+      - type: move
+        from: attributes.log
+        to: body
+      - type: trim
+        trim_chars: "\n"
+      - type: json_parser
+        id: parse-body-json
+        parse_from: body
+        on_error: send
+      - type: regex_parser
+        id: extract-container-id
+        regex: '/var/lib/docker/containers/(?P<container_id>[a-f0-9]{12})[a-f0-9]*/.*'
+        parse_from: attributes["log.file.path"]
+        on_error: send
+
+  # ── prometheus — scrapes the app's /metrics endpoint ───────────────────────
+  # This bridges the existing prometheus/client_golang metrics into the OTel
+  # pipeline so they are forwarded to Grafana Cloud Metrics (Mimir).
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: ecom-engine
+          scrape_interval: 15s
+          static_configs:
+            - targets: ["app:8080"]
+          metric_relabel_configs:
+            - source_labels: [__name__]
+              action: keep
+              regex: ecom_engine_.*
+
+processors:
+  batch:
+    timeout: 5s
+    send_batch_size: 1024
+
+  resourcedetection:
+    detectors: [docker, system, env]
+    docker:
+      use_hostname_as_resource_id: false
+    timeout: 5s
+    override: false
+
+  resource:
+    attributes:
+      - key: service.name
+        from_attribute: "docker.container.labels.com.docker.compose.service"
+        action: insert
+      - key: service.name
+        from_attribute: "container.name"
+        action: insert
+
+  attributes/logs:
+    actions:
+      - key: log.level
+        from_attribute: level
+        action: insert
+      - key: log.level
+        from_attribute: severity
+        action: insert
+
+exporters:
+  # ── Grafana Cloud OTLP — all signals via one authenticated endpoint ─────────
+  otlphttp/grafana-cloud:
+    endpoint: ${env:GRAFANA_CLOUD_OTLP_ENDPOINT}
+    auth:
+      authenticator: basicauth/grafana-cloud
+    compression: gzip
+
+extensions:
+  basicauth/grafana-cloud:
+    client_auth:
+      username: ${env:GRAFANA_CLOUD_INSTANCE_ID}
+      password: ${env:GRAFANA_CLOUD_API_KEY}
+
+service:
+  extensions: [basicauth/grafana-cloud]
+
+  pipelines:
+    logs:
+      receivers: [filelog]
+      processors: [batch, resourcedetection, resource, attributes/logs]
+      exporters: [otlphttp/grafana-cloud]
+
+    traces:
+      receivers: [otlp]
+      processors: [batch, resourcedetection, resource]
+      exporters: [otlphttp/grafana-cloud]
+
+    metrics:
+      receivers: [otlp, prometheus]
+      processors: [batch, resourcedetection, resource]
+      exporters: [otlphttp/grafana-cloud]
+
+  telemetry:
+    logs:
+      level: warn

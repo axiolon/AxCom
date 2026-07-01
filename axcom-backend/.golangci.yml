@@ -1,0 +1,35 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+  go: '1.25'
+
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - unused
+    - gosec
+    - revive
+    - misspell
+    - gocritic
+  settings:
+    govet:
+      enable:
+        - shadow
+    revive:
+      rules:
+        - name: exported
+          disabled: true
+    gosec:
+      excludes:
+        - G104 # errcheck handles checking errors
+
+formatters:
+  enable:
+    - goimports

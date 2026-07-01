@@ -1,0 +1,47 @@
+{
+  "collections": [
+    {
+      "name": "categories",
+      "indexes": [
+        {
+          "keys": { "slug": 1 },
+          "options": { "unique": true, "name": "uq_categories_slug" }
+        },
+        {
+          "keys": { "parent_id": 1 },
+          "options": { "name": "idx_categories_parent_id" }
+        }
+      ]
+    },
+    {
+      "name": "products",
+      "indexes": [
+        {
+          "keys": { "category_id": 1 },
+          "options": { "name": "idx_products_category_id" }
+        },
+        {
+          "keys": { "variants.id": 1 },
+          "options": { "name": "idx_products_variant_id" }
+        },
+        {
+          "keys": { "variants.sku": 1 },
+          "options": { "unique": true, "sparse": true, "name": "uq_products_variant_sku" }
+        }
+      ]
+    },
+    {
+      "name": "reviews",
+      "indexes": [
+        {
+          "keys": { "product_id": 1 },
+          "options": { "name": "idx_reviews_product_id" }
+        },
+        {
+          "keys": { "user_id": 1 },
+          "options": { "name": "idx_reviews_user_id" }
+        }
+      ]
+    }
+  ]
+}

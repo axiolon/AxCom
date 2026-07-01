@@ -1,0 +1,59 @@
+# Binary triggers
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Compiled binaries
+bin/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, consumed by go tool cover
+*.out
+*.prof
+coverage.txt
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Dependency directories (only needed if you do not want to clone them)
+vendor/
+
+# IDEs/Editors configuration
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Operating System Files
+Thumbs.db
+db.files
+.DS_Store
+ehthumbs.db
+
+# Environment Files
+.env
+.env.*
+.env.local
+.env.*.local
+
+# Explicitly track env template files
+!.env.example
+
+# Local Configuration files
+config.yaml
+
+# Application logs & temporary files
+logs/
+*.log
+tmp/
+dist/
+build/
+

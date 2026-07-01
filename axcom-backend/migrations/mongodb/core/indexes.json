@@ -1,0 +1,54 @@
+{
+  "collections": [
+    {
+      "name": "users",
+      "indexes": [
+        {
+          "keys": { "email": 1 },
+          "options": { "unique": true, "name": "uq_users_email" }
+        },
+        {
+          "keys": { "role": 1 },
+          "options": { "name": "idx_users_role" }
+        }
+      ],
+      "validator": {
+        "$jsonSchema": {
+          "bsonType": "object",
+          "required": ["_id", "email", "password", "role"],
+          "properties": {
+            "email":    { "bsonType": "string" },
+            "password": { "bsonType": "string" },
+            "role":     { "bsonType": "string", "enum": ["customer", "merchant", "admin"] }
+          }
+        }
+      }
+    },
+    {
+      "name": "refresh_tokens",
+      "indexes": [
+        {
+          "keys": { "user_id": 1 },
+          "options": { "name": "idx_refresh_tokens_user_id" }
+        },
+        {
+          "keys": { "expires_at": 1 },
+          "options": { "expireAfterSeconds": 0, "name": "ttl_refresh_tokens_expires_at" }
+        }
+      ]
+    },
+    {
+      "name": "password_reset_tokens",
+      "indexes": [
+        {
+          "keys": { "user_id": 1 },
+          "options": { "name": "idx_password_reset_user_id" }
+        },
+        {
+          "keys": { "expires_at": 1 },
+          "options": { "expireAfterSeconds": 0, "name": "ttl_password_reset_expires_at" }
+        }
+      ]
+    }
+  ]
+}

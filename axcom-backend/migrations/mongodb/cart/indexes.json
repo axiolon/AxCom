@@ -1,0 +1,13 @@
+{
+  "collections": [
+    {
+      "name": "carts",
+      "indexes": [
+        {
+          "keys": { "updated_at": 1 },
+          "options": { "name": "idx_carts_updated_at" }
+        }
+      ]
+    }
+  ]
+}

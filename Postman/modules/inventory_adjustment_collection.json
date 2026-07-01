@@ -1,0 +1,51 @@
+{
+  "info": {
+    "_postman_id": "c1a898b9-5f2c-4a37-b957-61c02abdfcf5",
+    "name": "Ecom Engine - Inventory (Adjustment)",
+    "description": "Postman collection for manually adjusting stock levels with reason attributes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Adjust Stock",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"location_id\": \"default\",\n    \"adjustment\": 5,\n    \"reason\": \"Cycle count deviation\"\n}"
+        },
+        "description": "Adjusts stock up or down for a variant by quantity. Requires authentication.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory",
+            "var_123",
+            "adjust"
+          ],
+          "raw": "{{base_url}}/api/inventory/var_123/adjust"
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

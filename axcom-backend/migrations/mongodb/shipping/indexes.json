@@ -1,0 +1,21 @@
+{
+  "collections": [
+    {
+      "name": "shipments",
+      "indexes": [
+        {
+          "keys": { "order_id": 1 },
+          "options": { "name": "idx_shipments_order_id" }
+        },
+        {
+          "keys": { "tracking_number": 1 },
+          "options": { "name": "idx_shipments_tracking_number" }
+        },
+        {
+          "keys": { "status": 1 },
+          "options": { "name": "idx_shipments_status" }
+        }
+      ]
+    }
+  ]
+}

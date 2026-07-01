@@ -1,0 +1,113 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+#
+# Grafana unified alerting — business domain event alerts.
+# Log-derived via Loki (LogQL). Fire on unusual activity in payment and auth flows.
+
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Business Alerts
+    folder: ecom-engine
+    interval: 1m
+    rules:
+      - uid: ecom-alert-payment-errors
+        title: Payment Error Spike
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              datasource:
+                type: loki
+                uid: loki
+              expr: 'sum(count_over_time({service_name="ecom-engine"} | json | level="error" |~ "(?i)payment" [5m]))'
+              queryType: range
+              refId: A
+              legendFormat: payment_errors
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [10]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: sum
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 0m
+        labels:
+          severity: critical
+          service: ecom-engine
+          domain: payments
+        annotations:
+          summary: "Payment error spike detected"
+          description: "More than 10 payment error log events in the last 5 minutes. Investigate payment provider or checkout flow."
+        isPaused: false
+
+      - uid: ecom-alert-auth-failures
+        title: Auth Failure Spike
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              datasource:
+                type: loki
+                uid: loki
+              expr: 'sum(count_over_time({service_name="ecom-engine"} | json |~ "(?i)(invalid token|unauthorized|auth failed)" [5m]))'
+              queryType: range
+              refId: A
+              legendFormat: auth_failures
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [30]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: sum
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 0m
+        labels:
+          severity: warning
+          service: ecom-engine
+          domain: auth
+        annotations:
+          summary: "Auth failure spike — possible brute-force"
+          description: "More than 30 auth failure log events in 5 minutes. May indicate credential stuffing or brute-force attempt."
+        isPaused: false

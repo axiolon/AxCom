@@ -1,0 +1,21 @@
+{
+  "collections": [
+    {
+      "name": "orders",
+      "indexes": [
+        {
+          "keys": { "customer_id": 1 },
+          "options": { "name": "idx_orders_customer_id" }
+        },
+        {
+          "keys": { "status": 1 },
+          "options": { "name": "idx_orders_status" }
+        },
+        {
+          "keys": { "created_at": -1 },
+          "options": { "name": "idx_orders_created_at" }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "info": {
+    "_postman_id": "a9a3b934-8c88-460d-85fa-80e461a293bf",
+    "name": "Ecom Engine - Catalog (Bulk)",
+    "description": "Postman collection for testing the product bulk management endpoints of the ecom-engine API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Bulk Create Products",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "[\n    {\n        \"name\": \"Wireless Mouse Pro\",\n        \"description\": \"Ergonomic wireless mouse\",\n        \"category_id\": \"cat_accessories\",\n        \"variants\": [\n            {\n                \"sku\": \"MS-WIRE-PRO-01\",\n                \"name\": \"Black\",\n                \"price\": 49.99,\n                \"attributes\": {\n                    \"color\": \"Black\"\n                }\n            }\n        ]\n    },\n    {\n        \"name\": \"Mechanical Keyboard\",\n        \"description\": \"RGB mechanical keyboard\",\n        \"category_id\": \"cat_accessories\",\n        \"variants\": [\n            {\n                \"sku\": \"KB-MECH-01\",\n                \"name\": \"Blue Switch\",\n                \"price\": 89.99,\n                \"attributes\": {\n                    \"switch\": \"Blue\"\n                }\n            }\n        ]\n    }\n]"
+        },
+        "description": "Creates multiple products along with their variants in a single API request. Requires authenticated admin token.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "bulk"
+          ],
+          "raw": "{{base_url}}/api/products/bulk"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Bulk Update Products",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "[\n    {\n        \"id\": \"prod_123\",\n        \"name\": \"Wireless Mouse Pro V2\",\n        \"description\": \"Updated ergonomic wireless mouse\",\n        \"category_id\": \"cat_accessories\",\n        \"variants\": [\n            {\n                \"id\": \"var_987\",\n                \"sku\": \"MS-WIRE-PRO-01\",\n                \"name\": \"Black\",\n                \"price\": 54.99,\n                \"attributes\": {\n                    \"color\": \"Black\"\n                }\n            }\n        ]\n    }\n]"
+        },
+        "description": "Updates multiple existing products and their variants in a single API request. Requires authenticated admin token.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "PUT",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "bulk"
+          ],
+          "raw": "{{base_url}}/api/products/bulk"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Bulk Delete Products",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"ids\": [\n        \"prod_123\",\n        \"prod_456\"\n    ]\n}"
+        },
+        "description": "Deletes multiple products simultaneously by their IDs in a single API request. Requires authenticated admin token.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "DELETE",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "bulk"
+          ],
+          "raw": "{{base_url}}/api/products/bulk"
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

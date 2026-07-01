@@ -1,0 +1,50 @@
+{
+  "info": {
+    "_postman_id": "c1a898b9-5f2c-4a37-b957-61c02abdfcf6",
+    "name": "Ecom Engine - Inventory (Bulk)",
+    "description": "Postman collection for bulk stock level updates of product variants.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Bulk Update Stock",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"items\": [\n        {\n            \"variant_id\": \"var_1\",\n            \"location_id\": \"loc-a\",\n            \"quantity\": 50\n        },\n        {\n            \"variant_id\": \"var_2\",\n            \"location_id\": \"loc-b\",\n            \"quantity\": 25\n        }\n    ]\n}"
+        },
+        "description": "Updates multiple stock items at once. Requires authentication.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "inventory",
+            "bulk-update"
+          ],
+          "raw": "{{base_url}}/api/inventory/bulk-update"
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

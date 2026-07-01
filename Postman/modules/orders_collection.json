@@ -1,0 +1,304 @@
+{
+  "info": {
+    "_postman_id": "8c5c7d24-3456-42d8-bf5b-c2e36b8e8f81",
+    "name": "Ecom Engine - Orders",
+    "description": "Collection of API endpoints for managing User, Guest, and Administrative orders.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "description": "Endpoints for authenticated customer order flows.",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"items\": [\n        {\n            \"variant_id\": \"var_123\",\n            \"quantity\": 2,\n            \"price\": 29.99\n        }\n    ]\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "description": "Customer bearer token",
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "POST",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ],
+              "raw": "{{base_url}}/api/orders"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List My Orders",
+          "request": {
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "GET",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ],
+              "raw": "{{base_url}}/api/orders?limit=20\u0026offset=0"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Order",
+          "request": {
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "GET",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                ":id"
+              ],
+              "raw": "{{base_url}}/api/orders/:id",
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "ord_123"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel My Order",
+          "request": {
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "method": "POST",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                ":id",
+                "cancel"
+              ],
+              "raw": "{{base_url}}/api/orders/:id/cancel",
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "ord_123"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "name": "User Orders"
+    },
+    {
+      "description": "Endpoints for unauthenticated guest checkout.",
+      "item": [
+        {
+          "name": "Create Guest Order",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"customer_snapshot\": {\n        \"name\": \"John Doe\",\n        \"email\": \"john@example.com\",\n        \"contact_number\": \"+1234567890\"\n    },\n    \"items\": [\n        {\n            \"variant_id\": \"var_456\",\n            \"quantity\": 1,\n            \"price\": 49.99\n        }\n    ]\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "orders",
+                "guest"
+              ],
+              "raw": "{{base_url}}/api/orders/guest"
+            }
+          },
+          "response": []
+        }
+      ],
+      "name": "Guest Orders"
+    },
+    {
+      "description": "Administrative order management endpoints.",
+      "item": [
+        {
+          "name": "List All Orders",
+          "request": {
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "method": "GET",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ],
+              "raw": "{{base_url}}/api/admin/orders?limit=20\u0026offset=0"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Order",
+          "request": {
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "method": "GET",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "orders",
+                ":id"
+              ],
+              "raw": "{{base_url}}/api/admin/orders/:id",
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "ord_123"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Transition Order State",
+          "request": {
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"action\": \"ship\"\n}"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "method": "POST",
+            "url": {
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "admin",
+                "orders",
+                ":id",
+                "transition"
+              ],
+              "raw": "{{base_url}}/api/admin/orders/:id/transition",
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "ord_123"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ],
+      "name": "Admin Orders"
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "customer_jwt_here",
+      "type": "string"
+    },
+    {
+      "key": "admin_token",
+      "value": "admin_jwt_here",
+      "type": "string"
+    }
+  ]
+}

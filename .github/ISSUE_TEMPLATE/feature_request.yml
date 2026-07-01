@@ -1,0 +1,43 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+
+name: 🚀 Feature Request
+description: Suggest an idea, enhancement, or new feature for AxCom.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We welcome proposals for new features! Please describe your idea clearly so that maintainers can evaluate it.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Is your feature request related to a problem?
+      description: A clear and concise description of what the problem or limitation is.
+      placeholder: E.g., I'm frustrated when trying to...
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Describe the solution you'd like
+      description: A clear and concise description of what you want to happen.
+      placeholder: E.g., Introduce a new API route for...
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Describe alternatives you've considered
+      description: A clear and concise description of any alternative solutions or workarounds you've considered.
+      placeholder: E.g., Instead of X, we could do Y...
+  - type: checkboxes
+    id: checkboxes
+    attributes:
+      label: Checklist
+      options:
+        - label: I have checked that a similar feature request doesn't already exist.
+          required: true
+        - label: I agree to follow this project's [Code of Conduct](https://github.com/axiolon-labs/ecom-engine/blob/main/CODE_OF_CONDUCT.md).
+          required: true

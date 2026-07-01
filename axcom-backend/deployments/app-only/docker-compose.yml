@@ -1,0 +1,54 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+
+# App-only deployment — connect to an external / managed database.
+#
+# Use case: cheapest single-VPS setup.  Database is provided by a managed
+# service (MongoDB Atlas, Supabase, PlanetScale, etc.).  No local DB container.
+#
+# Prerequisites:
+#   docker network create ecom-net
+#   cp ../../.env.example ../../.env.dev  (then set DB_CONNECTION_STRING, JWT_SECRET, etc.)
+#
+# Usage:
+#   DB_TYPE=postgres \
+#   DB_CONNECTION_STRING="postgres://user:pass@db.example.com:5432/ecom_db?sslmode=require" \
+#   docker compose up -d
+#
+# For monitoring add-on, run the monitoring stack and set:
+#   OTEL_EXPORTER_OTLP_ENDPOINT=http://otelcol:4318
+
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-8080}:8080"
+    env_file:
+      - ../../.env.${APP_ENV:-dev}
+    environment:
+      # Database — provided externally; override via env or .env file
+      - DB_TYPE=${DB_TYPE:-mongodb}
+      - DB_CONNECTION_STRING=${DB_CONNECTION_STRING}
+      # App config — uses memory cache and local event bus by default
+      - APP_CONFIG=/app/config.yaml
+      - LOG_FORMAT=json
+      - LOG_LEVEL=info
+      # Tracing — disabled by default; enable when monitoring stack is running
+      - OTEL_ENABLED=${OTEL_ENABLED:-false}
+      - OTEL_EXPORTER=${OTEL_EXPORTER:-none}
+      - OTEL_TRACE_SAMPLE=${OTEL_TRACE_SAMPLE:-1.0}
+      - OTEL_EXPORTER_OTLP_ENDPOINT=${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otelcol:4318}
+    volumes:
+      - ./config.yaml:/app/config.yaml:ro
+    networks:
+      - ecom-net
+
+volumes: {}
+
+networks:
+  ecom-net:
+    external: true

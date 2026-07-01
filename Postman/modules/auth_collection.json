@@ -1,0 +1,260 @@
+{
+  "info": {
+    "_postman_id": "fca898b9-5f2c-4a37-b957-61c02abdfcf1",
+    "name": "Ecom Engine - Auth",
+    "description": "Postman collection for testing the authentication and user management endpoints of the ecom-engine API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Register User",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"Password123\",\n    \"role\": \"customer\"\n}"
+        },
+        "description": "Registers a new user account with a secure password and optional user role.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "register"
+          ],
+          "raw": "{{base_url}}/api/auth/register"
+        }
+      },
+      "response": []
+    },
+    {
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.access_token) {",
+              "    pm.environment.set(\"access_token\", jsonData.access_token);",
+              "}",
+              "if (jsonData.refresh_token) {",
+              "    pm.environment.set(\"refresh_token\", jsonData.refresh_token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "name": "Login User",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"Password123\"\n}"
+        },
+        "description": "Authenticates user credentials and generates access and refresh tokens. Saves tokens to the active environment.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ],
+          "raw": "{{base_url}}/api/auth/login"
+        }
+      },
+      "response": []
+    },
+    {
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.access_token) {",
+              "    pm.environment.set(\"access_token\", jsonData.access_token);",
+              "}",
+              "if (jsonData.refresh_token) {",
+              "    pm.environment.set(\"refresh_token\", jsonData.refresh_token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "name": "Refresh Session",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}"
+        },
+        "description": "Uses a valid refresh token to rotate the session and request a fresh access and refresh token.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "refresh"
+          ],
+          "raw": "{{base_url}}/api/auth/refresh"
+        }
+      },
+      "response": []
+    },
+    {
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "if (jsonData.reset_token) {",
+              "    pm.environment.set(\"reset_token\", jsonData.reset_token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "name": "Request Password Reset",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"user@example.com\"\n}"
+        },
+        "description": "Generates a reset token for the specified user email. For testing/dev convenience, the token is returned in the JSON payload.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "password-reset"
+          ],
+          "raw": "{{base_url}}/api/auth/password-reset"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Confirm Password Reset",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"token\": \"{{reset_token}}\",\n    \"new_password\": \"NewPassword123\"\n}"
+        },
+        "description": "Completes the password recovery cycle using the generated reset token and a new strong password.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "password-reset",
+            "confirm"
+          ],
+          "raw": "{{base_url}}/api/auth/password-reset/confirm"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Logout User",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"refresh_token\": \"{{refresh_token}}\"\n}"
+        },
+        "description": "Revokes the active refresh token, immediately logging the user session out.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "logout"
+          ],
+          "raw": "{{base_url}}/api/auth/logout"
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": [
+          ""
+        ],
+        "type": "text/javascript"
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "exec": [
+          ""
+        ],
+        "type": "text/javascript"
+      }
+    }
+  ]
+}

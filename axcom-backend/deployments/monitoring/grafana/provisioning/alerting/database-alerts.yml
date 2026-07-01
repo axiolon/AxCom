@@ -1,0 +1,102 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+#
+# Grafana unified alerting — database / connection pool alerts.
+
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Database Alerts
+    folder: ecom-engine
+    interval: 1m
+    rules:
+      - uid: ecom-alert-db-pool-exhausted
+        title: DB Pool Near Exhaustion
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 120
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "100 * ecom_engine_db_pool_acquired_conns / clamp_min(ecom_engine_db_pool_max_conns, 1)"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [90]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 2m
+        labels:
+          severity: critical
+          service: ecom-engine
+        annotations:
+          summary: "DB connection pool above 90%"
+          description: "Pool utilization is {{ $values.A.Value | printf \"%.1f\" }}% for 2+ minutes. Acquire timeouts will occur above this threshold."
+        isPaused: false
+
+      - uid: ecom-alert-db-empty-acquires
+        title: DB Pool Empty Acquires
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 180
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "rate(ecom_engine_db_pool_empty_acquire_count_total[1m])"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0.5]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 3m
+        labels:
+          severity: warning
+          service: ecom-engine
+        annotations:
+          summary: "DB pool acquiring on empty pool"
+          description: "{{ $values.A.Value | printf \"%.2f\" }} empty acquires/s for 3 minutes. Increase db.pool.maxConns or investigate slow queries holding connections."
+        isPaused: false

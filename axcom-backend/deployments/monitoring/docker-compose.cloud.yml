@@ -1,0 +1,59 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+
+# Grafana Cloud override — replaces all local backends with Grafana Cloud.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.cloud.yml up -d
+#
+# Required env vars (add to .env):
+#   GRAFANA_CLOUD_OTLP_ENDPOINT   e.g. https://otlp-gateway-prod-us-east-0.grafana.net/otlp
+#   GRAFANA_CLOUD_INSTANCE_ID     your numeric stack ID
+#   GRAFANA_CLOUD_API_KEY         a Grafana Cloud API key with MetricsPublisher + LogsPublisher + TracesPublisher scope
+#
+# What this file does:
+#   - Overrides otelcol to use the cloud collector config (all signals → Grafana Cloud)
+#   - Removes loki, tempo, prometheus, grafana (managed by Grafana Cloud)
+
+version: '3.8'
+
+services:
+  otelcol:
+    image: otel/opentelemetry-collector-contrib:0.154.0
+    command: ["--config=/etc/otelcol/config.yml"]
+    user: root
+    volumes:
+      - ./otelcol/otelcol-cloud.yml:/etc/otelcol/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      - "${OTEL_GRPC_PORT:-4317}:4317"
+      - "${OTEL_HTTP_PORT:-4318}:4318"
+    environment:
+      - GRAFANA_CLOUD_OTLP_ENDPOINT=${GRAFANA_CLOUD_OTLP_ENDPOINT}
+      - GRAFANA_CLOUD_INSTANCE_ID=${GRAFANA_CLOUD_INSTANCE_ID}
+      - GRAFANA_CLOUD_API_KEY=${GRAFANA_CLOUD_API_KEY}
+    networks:
+      - ecom-net
+    restart: unless-stopped
+
+  # Disable local backends — managed by Grafana Cloud
+  loki:
+    deploy:
+      replicas: 0
+
+  tempo:
+    deploy:
+      replicas: 0
+
+  prometheus:
+    deploy:
+      replicas: 0
+
+  grafana:
+    deploy:
+      replicas: 0
+
+networks:
+  ecom-net:
+    external: true

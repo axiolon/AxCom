@@ -1,0 +1,82 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+#
+# OTel Collector — self-hosted configuration
+#
+# Pipelines:
+#   logs    OTLP receiver (app SDK) → Loki
+#   traces  OTLP receiver (app SDK) → Tempo
+#   metrics OTLP receiver (app SDK) → Prometheus remote_write
+#           Note: Prometheus also scrapes app:8080/metrics directly via prometheus.yml
+
+receivers:
+  # ── OTLP — receives traces, metrics, and logs from the app SDK ─────────────
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  # ── batch — buffer before export ───────────────────────────────────────────
+  batch:
+    timeout: 5s
+    send_batch_size: 1024
+
+  # ── resource_detection — enriches with host metadata ───────────────────────
+  resource_detection:
+    detectors: [system, env]
+    timeout: 5s
+    override: false
+
+  # ── resource — normalize service.name ──────────────────────────────────────
+  resource:
+    attributes:
+      - key: service.name
+        from_attribute: "container.name"
+        action: insert
+
+exporters:
+  # ── Loki — log backend (using native OTLP/HTTP ingestion) ──────────────────
+  otlp_http/loki:
+    endpoint: http://loki:3100/otlp
+    tls:
+      insecure: true
+
+  # ── Tempo — trace backend (OTLP gRPC, internal network only) ───────────────
+  otlp_grpc/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+
+  # ── Prometheus remote_write — metrics from OTLP ────────────────────────────
+  prometheus_remote_write:
+    endpoint: http://prometheus:9090/api/v1/write
+    tls:
+      insecure: true
+
+  # ── debug — uncomment to log pipeline output during development ────────────
+  # debug:
+  #   verbosity: detailed
+
+service:
+  pipelines:
+    logs:
+      receivers: [otlp]
+      processors: [batch, resource_detection, resource]
+      exporters: [otlp_http/loki]
+
+    traces:
+      receivers: [otlp]
+      processors: [batch, resource_detection, resource]
+      exporters: [otlp_grpc/tempo]
+
+    metrics:
+      receivers: [otlp]
+      processors: [batch, resource_detection, resource]
+      exporters: [prometheus_remote_write]
+
+  telemetry:
+    logs:
+      level: warn

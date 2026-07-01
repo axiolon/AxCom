@@ -1,0 +1,351 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+#
+# Grafana unified alerting — event bus, outbox relay, and DLQ alerts.
+
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: Events Alerts
+    folder: ecom-engine
+    interval: 1m
+    rules:
+
+      # -----------------------------------------------------------------------
+      # DLQ: any DLQ write is a processed-message loss signal
+      # -----------------------------------------------------------------------
+      - uid: ecom-alert-events-dlq
+        title: Events Routed to DLQ
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "sum(increase(ecom_engine_events_dlq_total[5m]))"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 0m
+        labels:
+          severity: critical
+          service: ecom-engine
+        annotations:
+          summary: "Events routed to Dead Letter Queue"
+          description: "{{ $values.A.Value | printf \"%.0f\" }} event(s) were routed to the DLQ in the last 5 minutes. These messages failed all retry attempts and require manual inspection."
+        isPaused: false
+
+      # -----------------------------------------------------------------------
+      # DLQ dropped: DLQ buffer full means data is being silently lost
+      # -----------------------------------------------------------------------
+      - uid: ecom-alert-events-dlq-dropped
+        title: Events Dropped (DLQ Full)
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "sum(increase(ecom_engine_events_dlq_dropped_total[5m]))"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 0m
+        labels:
+          severity: critical
+          service: ecom-engine
+        annotations:
+          summary: "Events dropped — local DLQ buffer is full"
+          description: "{{ $values.A.Value | printf \"%.0f\" }} event(s) were silently dropped because the in-memory DLQ channel was full. Increase dlq_buffer_size or investigate the consumer backlog."
+        isPaused: false
+
+      # -----------------------------------------------------------------------
+      # High handler error rate
+      # -----------------------------------------------------------------------
+      - uid: ecom-alert-events-error-rate
+        title: High Event Handler Error Rate
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                sum(rate(ecom_engine_events_consumed_total{status="failure"}[5m]))
+                / clamp_min(sum(rate(ecom_engine_events_consumed_total[5m])), 0.001)
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0.05]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        labels:
+          severity: warning
+          service: ecom-engine
+        annotations:
+          summary: "Event handler error rate above 5%"
+          description: "{{ $values.A.Value | printf \"%.1f%%\" }} of event handler invocations are failing after all retries. Check handler logs and downstream dependencies."
+        isPaused: false
+
+      # -----------------------------------------------------------------------
+      # Outbox relay errors
+      # -----------------------------------------------------------------------
+      - uid: ecom-alert-events-outbox-errors
+        title: Outbox Relay Errors
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "increase(ecom_engine_events_outbox_relay_errors_total[5m])"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        labels:
+          severity: warning
+          service: ecom-engine
+        annotations:
+          summary: "Outbox relay is encountering errors"
+          description: "{{ $values.A.Value | printf \"%.0f\" }} outbox relay error(s) in the last 5 minutes. The relay may be unable to fetch from the outbox table or mark records as published. Unresolved events will not be delivered."
+        isPaused: false
+
+      # -----------------------------------------------------------------------
+      # Outbox relay backlog — pending batch near batch limit
+      # -----------------------------------------------------------------------
+      - uid: ecom-alert-events-outbox-backlog
+        title: Outbox Relay Backlog
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "ecom_engine_events_outbox_pending_batch"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [90]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 10m
+        labels:
+          severity: warning
+          service: ecom-engine
+        annotations:
+          summary: "Outbox relay is hitting the batch size limit"
+          description: "The outbox relay is consistently fetching batches of {{ $values.A.Value | printf \"%.0f\" }} records (at or near the configured batch size). The relay is falling behind the write rate — consider reducing poll_interval or increasing batch_size."
+        isPaused: false
+
+      # -----------------------------------------------------------------------
+      # RabbitMQ reconnections (warns on instability, not first connect)
+      # -----------------------------------------------------------------------
+      - uid: ecom-alert-events-rabbitmq-reconnects
+        title: RabbitMQ Reconnection Spike
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "increase(ecom_engine_events_rabbitmq_reconnects_total[10m])"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [2]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 0m
+        labels:
+          severity: warning
+          service: ecom-engine
+        annotations:
+          summary: "RabbitMQ connection is unstable"
+          description: "{{ $values.A.Value | printf \"%.0f\" }} RabbitMQ reconnection(s) in the last 10 minutes. Check broker health, network stability, and credentials."
+        isPaused: false
+
+      # -----------------------------------------------------------------------
+      # Sustained high duplicate (dedup skip) rate — relay mark-publish bug
+      # -----------------------------------------------------------------------
+      - uid: ecom-alert-events-dedup-spike
+        title: High Duplicate Event Rate
+        condition: B
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: "sum(rate(ecom_engine_events_dedup_skipped_total[5m]))"
+              instant: true
+              refId: A
+          - refId: B
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [1]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    params: []
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: B
+              type: threshold
+        noDataState: NoData
+        execErrState: Error
+        for: 10m
+        labels:
+          severity: warning
+          service: ecom-engine
+        annotations:
+          summary: "High rate of duplicate events being skipped"
+          description: "The idempotency middleware is skipping {{ $values.A.Value | printf \"%.2f\" }} events/s. This likely means the outbox relay is republishing events it already sent, possibly because MarkPublished is failing silently."
+        isPaused: false

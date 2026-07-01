@@ -1,0 +1,142 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+    "name": "Ecom Engine - Catalog (Images)",
+    "description": "Postman collection for testing the product image management endpoints of the ecom-engine API.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Presign Upload URL",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"files\": [\n        {\n            \"filename\": \"product_shot.jpg\",\n            \"content_type\": \"image/jpeg\"\n        }\n    ]\n}"
+        },
+        "description": "Generates a presigned storage upload URL for client-side uploads. Requires admin authorization.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "prod_123",
+            "images",
+            "presign"
+          ],
+          "raw": "{{base_url}}/api/products/prod_123/images/presign"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Register Uploaded Images",
+      "request": {
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"images\": [\n        {\n            \"key\": \"products/prod_123/img_abc123.jpg\",\n            \"is_primary\": true\n        }\n    ]\n}"
+        },
+        "description": "Registers pre-uploaded storage objects into the product's database record. Requires admin authorization.",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "POST",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "prod_123",
+            "images",
+            "register"
+          ],
+          "raw": "{{base_url}}/api/products/prod_123/images/register"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Set Primary Image",
+      "request": {
+        "description": "Flags a specific image as primary for the product catalog display. Requires admin authorization.",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "PUT",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "prod_123",
+            "images",
+            "img_abc123",
+            "primary"
+          ],
+          "raw": "{{base_url}}/api/products/prod_123/images/img_abc123/primary"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Image",
+      "request": {
+        "description": "Removes a product image resource from database and storage bucket. Requires admin authorization.",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "method": "DELETE",
+        "url": {
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "products",
+            "prod_123",
+            "images",
+            "img_abc123"
+          ],
+          "raw": "{{base_url}}/api/products/prod_123/images/img_abc123"
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

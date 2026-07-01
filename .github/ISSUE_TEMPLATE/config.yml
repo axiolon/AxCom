@@ -1,0 +1,11 @@
+# Copyright 2026 Axiolon Labs
+# SPDX-License-Identifier: Apache-2.0
+
+blank_issues_enabled: false
+contact_links:
+  - name: Questions & Discussions
+    url: https://github.com/axiolon-labs/ecom-engine/discussions
+    about: Ask questions, share ideas, and connect with the community.
+  - name: Report a Security Vulnerability
+    url: https://github.com/axiolon-labs/ecom-engine/security/policy
+    about: Please report security concerns through our official vulnerability process instead of opening public issues.
