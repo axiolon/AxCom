@@ -22,7 +22,7 @@
 
 ---
 
-AxCom is a high-performance, containerized e-commerce backend built with **Go**, utilizing **Gin**, **PostgreSQL** / **MongoDB**, **Redis**, and **OpenTelemetry**. It is designed with clean architecture principles to support massive scalability, secure checkout, real-time inventory management, and robust modular domain boundaries.
+AxCom is a high-performance, containerized e-commerce backend built with **Go**, utilizing **Gin**, **PostgreSQL** / **MongoDB**, **Redis**, **RabbitMQ** (Optional), and **OpenTelemetry**. It is designed with clean architecture principles to support massive scalability, secure checkout, real-time inventory management, and robust modular domain boundaries.
 
 ## 🚀 Quick Start
 
@@ -33,6 +33,7 @@ For detailed setup, configuration, and architecture guides, please refer to our 
 - **Go** 1.25.11+
 - **PostgreSQL** 15+ or **MongoDB** 6.0+
 - **Redis** 7.0+
+- **RabbitMQ** 3.10+ (Optional, for distributed event messaging)
 - **Docker** (Optional)
 
 ### Running Locally
