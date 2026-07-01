@@ -29,8 +29,8 @@ To build and run the AxCom backend, make sure you have the following installed:
 Clone the codebase and navigate to the project root:
 
 ```bash
-git clone https://github.com/axiolon-labs/ecom-engine.git
-cd ecom-engine
+[git clone https://github.com/axiolon-labs/ecom-engine.git](https://github.com/axiolon/axcom.git)
+cd ecom-engine (cd axcom)
 ```
 
 ### 2. Configure Environment Variables
@@ -38,6 +38,8 @@ cd ecom-engine
 Copy the example environment configuration file to create your development configuration:
 
 ```bash
+cd axcom-backend
+
 cp .env.example .env
 ```
 
